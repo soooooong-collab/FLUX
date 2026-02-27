@@ -35,12 +35,15 @@ export default function LoginPage() {
     }
   };
 
+  const inputCls =
+    "w-full bg-white border border-flux-border rounded-xl px-4 py-3 text-flux-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition";
+
   return (
     <div className="max-w-sm mx-auto mt-16">
-      <h1 className="text-2xl font-bold text-white text-center mb-2">
+      <h1 className="text-2xl font-bold text-flux-dark text-center mb-2">
         {mode === "login" ? "로그인" : "회원가입"}
       </h1>
-      <p className="text-center text-flux-muted/50 text-sm mb-8">
+      <p className="text-center text-flux-muted text-sm mb-8">
         {mode === "login"
           ? "계정에 로그인하세요"
           : "새 계정을 만들어 시작하세요"}
@@ -49,56 +52,56 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === "register" && (
           <div>
-            <label className="block text-sm text-flux-muted/70 mb-1">이름</label>
+            <label className="block text-sm text-flux-muted mb-1">이름</label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-flux-accent transition"
+              className={inputCls}
               placeholder="홍길동"
             />
           </div>
         )}
 
         <div>
-          <label className="block text-sm text-flux-muted/70 mb-1">이메일</label>
+          <label className="block text-sm text-flux-muted mb-1">이메일</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-flux-accent transition"
+            className={inputCls}
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-flux-muted/70 mb-1">비밀번호</label>
+          <label className="block text-sm text-flux-muted mb-1">비밀번호</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-flux-accent transition"
+            className={inputCls}
             placeholder="6자 이상"
             minLength={6}
           />
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center">{error}</p>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-flux-accent text-white font-semibold rounded-lg hover:bg-flux-accent-light transition disabled:opacity-50"
+          className="w-full py-3 bg-flux-blue text-white font-semibold rounded-lg hover:bg-flux-blue-hover transition disabled:opacity-50"
         >
           {loading
             ? "처리 중..."
             : mode === "login"
-            ? "로그인"
-            : "회원가입"}
+              ? "로그인"
+              : "회원가입"}
         </button>
       </form>
 
@@ -108,7 +111,7 @@ export default function LoginPage() {
             setMode(mode === "login" ? "register" : "login");
             setError("");
           }}
-          className="text-sm text-flux-muted/50 hover:text-flux-accent transition"
+          className="text-sm text-flux-muted hover:text-flux-blue transition"
         >
           {mode === "login"
             ? "계정이 없으신가요? 회원가입"
@@ -117,9 +120,9 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-4 text-center">
-        <p className="text-xs text-flux-muted/30">
+        <p className="text-xs text-gray-400">
           또는 바로{" "}
-          <a href="/brief" className="text-flux-accent/70 hover:text-flux-accent transition">
+          <a href="/brief" className="text-flux-blue hover:underline transition">
             새 프로젝트 시작
           </a>
           {" "}(게스트 자동 생성)

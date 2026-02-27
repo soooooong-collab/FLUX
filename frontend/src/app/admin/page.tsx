@@ -56,10 +56,10 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5">
-      <p className="text-xs text-flux-muted/60 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      {sub && <p className="text-xs text-flux-muted/50 mt-1">{sub}</p>}
+    <div className="bg-white border border-flux-border rounded-xl p-5">
+      <p className="text-xs text-flux-muted uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-flux-dark">{value}</p>
+      {sub && <p className="text-xs text-flux-muted mt-1">{sub}</p>}
     </div>
   );
 }
@@ -77,8 +77,8 @@ function ActionButton({
 }) {
   const base = "px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40";
   const variants = {
-    primary: "bg-flux-accent hover:bg-flux-accent-light text-white",
-    secondary: "bg-white/10 hover:bg-white/20 text-flux-muted",
+    primary: "bg-flux-blue hover:bg-flux-blue-hover text-flux-dark",
+    secondary: "bg-gray-100 hover:bg-gray-200 text-flux-muted",
     danger: "bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30",
   };
   return (
@@ -103,13 +103,13 @@ function ProgressBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-flux-accent rounded-full transition-all"
+          className="h-full bg-flux-blue rounded-full transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs text-flux-muted/70 min-w-[3rem] text-right">{pct}%</span>
+      <span className="text-xs text-flux-muted min-w-[3rem] text-right">{pct}%</span>
     </div>
   );
 }
@@ -137,33 +137,33 @@ function OverviewTab({
     <div className="space-y-8">
       {/* Connection Status */}
       <section>
-        <h3 className="text-lg font-semibold text-white mb-4">System Status</h3>
+        <h3 className="text-lg font-semibold text-flux-dark mb-4">System Status</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5 flex items-center gap-3">
+          <div className="bg-white border border-flux-border rounded-xl p-5 flex items-center gap-3">
             <Badge ok={health?.postgresql ?? false} />
             <div>
-              <p className="text-sm font-medium text-white">PostgreSQL</p>
-              <p className="text-xs text-flux-muted/60">
+              <p className="text-sm font-medium text-flux-dark">PostgreSQL</p>
+              <p className="text-xs text-flux-muted">
                 {health?.data
                   ? `${health.data.methods}M / ${health.data.cases}C / ${health.data.directors}D`
                   : "Not connected"}
               </p>
             </div>
           </div>
-          <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5 flex items-center gap-3">
+          <div className="bg-white border border-flux-border rounded-xl p-5 flex items-center gap-3">
             <Badge ok={health?.neo4j ?? false} />
             <div>
-              <p className="text-sm font-medium text-white">Neo4j</p>
-              <p className="text-xs text-flux-muted/60">
+              <p className="text-sm font-medium text-flux-dark">Neo4j</p>
+              <p className="text-xs text-flux-muted">
                 {health?.neo4j ? "Connected" : "Not connected"}
               </p>
             </div>
           </div>
-          <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5 flex items-center gap-3">
+          <div className="bg-white border border-flux-border rounded-xl p-5 flex items-center gap-3">
             <Badge ok={(embStatus?.methods?.coverage ?? 0) > 0} />
             <div>
-              <p className="text-sm font-medium text-white">Embeddings</p>
-              <p className="text-xs text-flux-muted/60">
+              <p className="text-sm font-medium text-flux-dark">Embeddings</p>
+              <p className="text-xs text-flux-muted">
                 {embStatus
                   ? `M: ${embStatus.methods.coverage}% / C: ${embStatus.cases.coverage}%`
                   : "Unknown"}
@@ -176,7 +176,7 @@ function OverviewTab({
       {/* Data Counts */}
       {health?.data && (
         <section>
-          <h3 className="text-lg font-semibold text-white mb-4">Data Counts</h3>
+          <h3 className="text-lg font-semibold text-flux-dark mb-4">Data Counts</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard label="Methods" value={health.data.methods} />
             <StatCard label="Cases" value={health.data.cases} />
@@ -198,7 +198,7 @@ function OverviewTab({
       {/* Graph Stats */}
       {graphStats && (
         <section>
-          <h3 className="text-lg font-semibold text-white mb-4">Graph Topology</h3>
+          <h3 className="text-lg font-semibold text-flux-dark mb-4">Graph Topology</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {Object.entries(graphStats).map(([key, val]) => (
               <StatCard
@@ -214,21 +214,21 @@ function OverviewTab({
       {/* Embedding Coverage */}
       {embStatus && (
         <section>
-          <h3 className="text-lg font-semibold text-white mb-4">Embedding Coverage</h3>
+          <h3 className="text-lg font-semibold text-flux-dark mb-4">Embedding Coverage</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5">
-              <p className="text-sm font-medium text-white mb-2">Methods</p>
+            <div className="bg-white border border-flux-border rounded-xl p-5">
+              <p className="text-sm font-medium text-flux-dark mb-2">Methods</p>
               <ProgressBar value={embStatus.methods.embedded} max={embStatus.methods.total} />
-              <p className="text-xs text-flux-muted/50 mt-2">
+              <p className="text-xs text-flux-muted mt-2">
                 {embStatus.methods.embedded}/{embStatus.methods.total} embedded
                 {embStatus.methods.pending > 0 &&
                   ` (${embStatus.methods.pending} pending)`}
               </p>
             </div>
-            <div className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5">
-              <p className="text-sm font-medium text-white mb-2">Cases</p>
+            <div className="bg-white border border-flux-border rounded-xl p-5">
+              <p className="text-sm font-medium text-flux-dark mb-2">Cases</p>
               <ProgressBar value={embStatus.cases.embedded} max={embStatus.cases.total} />
-              <p className="text-xs text-flux-muted/50 mt-2">
+              <p className="text-xs text-flux-muted mt-2">
                 {embStatus.cases.embedded}/{embStatus.cases.total} embedded
                 {embStatus.cases.pending > 0 &&
                   ` (${embStatus.cases.pending} pending)`}
@@ -264,7 +264,7 @@ function MethodsTab() {
     ? methods.filter((m) => m.category === filter)
     : methods;
 
-  if (loading) return <p className="text-flux-muted/60">Loading methods...</p>;
+  if (loading) return <p className="text-flux-muted">Loading methods...</p>;
 
   return (
     <div className="space-y-6">
@@ -272,8 +272,8 @@ function MethodsTab() {
       <div className="flex flex-wrap gap-2">
         <button
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!filter
-              ? "bg-flux-accent text-white"
-              : "bg-white/10 text-flux-muted/70 hover:bg-white/20"
+              ? "bg-flux-blue text-flux-dark"
+              : "bg-gray-100 text-flux-muted hover:bg-gray-200"
             }`}
           onClick={() => setFilter("")}
         >
@@ -283,8 +283,8 @@ function MethodsTab() {
           <button
             key={cat.category}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === cat.category
-                ? "bg-flux-accent text-white"
-                : "bg-white/10 text-flux-muted/70 hover:bg-white/20"
+                ? "bg-flux-blue text-flux-dark"
+                : "bg-gray-100 text-flux-muted hover:bg-gray-200"
               }`}
             onClick={() => setFilter(cat.category)}
           >
@@ -297,7 +297,7 @@ function MethodsTab() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10 text-left text-flux-muted/50 text-xs uppercase">
+            <tr className="border-b border-flux-border text-left text-flux-muted text-xs uppercase">
               <th className="pb-3 pr-4">Name</th>
               <th className="pb-3 pr-4">Category</th>
               <th className="pb-3 pr-4">Core Principle</th>
@@ -309,15 +309,15 @@ function MethodsTab() {
             {filtered.map((m) => (
               <tr
                 key={m.id}
-                className="border-b border-white/5 hover:bg-white/5 transition"
+                className="border-b border-flux-border/50 hover:bg-gray-100 transition"
               >
-                <td className="py-3 pr-4 font-medium text-white">{m.method_name}</td>
+                <td className="py-3 pr-4 font-medium text-flux-dark">{m.method_name}</td>
                 <td className="py-3 pr-4">
-                  <span className="px-2 py-0.5 rounded bg-flux-surface/50 text-xs">
+                  <span className="px-2 py-0.5 rounded bg-blue-50 text-xs">
                     {m.category}
                   </span>
                 </td>
-                <td className="py-3 pr-4 text-flux-muted/70 max-w-xs truncate">
+                <td className="py-3 pr-4 text-flux-muted max-w-xs truncate">
                   {m.core_principle || "—"}
                 </td>
                 <td className="py-3 pr-4">
@@ -332,7 +332,7 @@ function MethodsTab() {
         </table>
       </div>
       {filtered.length === 0 && (
-        <p className="text-center text-flux-muted/40 py-8">No methods found</p>
+        <p className="text-center text-gray-400 py-8">No methods found</p>
       )}
     </div>
   );
@@ -360,7 +360,7 @@ function CasesTab() {
 
   const industries = Array.from(new Set(cases.map((c) => c.industry).filter(Boolean)));
 
-  if (loading) return <p className="text-flux-muted/60">Loading cases...</p>;
+  if (loading) return <p className="text-flux-muted">Loading cases...</p>;
 
   return (
     <div className="space-y-6">
@@ -368,8 +368,8 @@ function CasesTab() {
       <div className="flex flex-wrap gap-2">
         <button
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!industryFilter
-              ? "bg-flux-accent text-white"
-              : "bg-white/10 text-flux-muted/70 hover:bg-white/20"
+              ? "bg-flux-blue text-flux-dark"
+              : "bg-gray-100 text-flux-muted hover:bg-gray-200"
             }`}
           onClick={() => {
             setIndustryFilter("");
@@ -382,8 +382,8 @@ function CasesTab() {
           <button
             key={ind}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${industryFilter === ind
-                ? "bg-flux-accent text-white"
-                : "bg-white/10 text-flux-muted/70 hover:bg-white/20"
+                ? "bg-flux-blue text-flux-dark"
+                : "bg-gray-100 text-flux-muted hover:bg-gray-200"
               }`}
             onClick={() => {
               setIndustryFilter(ind);
@@ -399,7 +399,7 @@ function CasesTab() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10 text-left text-flux-muted/50 text-xs uppercase">
+            <tr className="border-b border-flux-border text-left text-flux-muted text-xs uppercase">
               <th className="pb-3 pr-4">Brand</th>
               <th className="pb-3 pr-4">Campaign</th>
               <th className="pb-3 pr-4">Industry</th>
@@ -412,18 +412,18 @@ function CasesTab() {
             {cases.map((c) => (
               <tr
                 key={c.case_id}
-                className="border-b border-white/5 hover:bg-white/5 transition"
+                className="border-b border-flux-border/50 hover:bg-gray-100 transition"
               >
-                <td className="py-3 pr-4 font-medium text-white">{c.brand}</td>
-                <td className="py-3 pr-4 text-flux-muted/70 max-w-[200px] truncate">
+                <td className="py-3 pr-4 font-medium text-flux-dark">{c.brand}</td>
+                <td className="py-3 pr-4 text-flux-muted max-w-[200px] truncate">
                   {c.campaign_title || "—"}
                 </td>
                 <td className="py-3 pr-4">
-                  <span className="px-2 py-0.5 rounded bg-flux-surface/50 text-xs">
+                  <span className="px-2 py-0.5 rounded bg-blue-50 text-xs">
                     {c.industry}
                   </span>
                 </td>
-                <td className="py-3 pr-4 text-xs text-flux-muted/60 max-w-[200px] truncate">
+                <td className="py-3 pr-4 text-xs text-flux-muted max-w-[200px] truncate">
                   {c.applied_methods?.join(", ") || "—"}
                 </td>
                 <td className="py-3 pr-4 text-xs">{c.budget_tier || "—"}</td>
@@ -436,7 +436,7 @@ function CasesTab() {
         </table>
       </div>
       {cases.length === 0 && (
-        <p className="text-center text-flux-muted/40 py-8">No cases found</p>
+        <p className="text-center text-gray-400 py-8">No cases found</p>
       )}
     </div>
   );
@@ -456,47 +456,47 @@ function DirectorsTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-flux-muted/60">Loading directors...</p>;
+  if (loading) return <p className="text-flux-muted">Loading directors...</p>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {directors.map((d) => (
         <div
           key={d.id}
-          className="bg-flux-deeper/60 border border-white/10 rounded-xl p-5 space-y-3"
+          className="bg-white border border-flux-border rounded-xl p-5 space-y-3"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-base font-semibold text-white">{d.name}</h4>
-              <p className="text-xs text-flux-accent">{d.archetype}</p>
+              <h4 className="text-base font-semibold text-flux-dark">{d.name}</h4>
+              <p className="text-xs text-flux-blue">{d.archetype}</p>
             </div>
             <Badge ok={d.is_active} />
           </div>
           {d.tagline && (
-            <p className="text-sm text-flux-muted/70 italic">{d.tagline}</p>
+            <p className="text-sm text-flux-muted italic">{d.tagline}</p>
           )}
           {d.description && (
-            <p className="text-xs text-flux-muted/50 line-clamp-2">{d.description}</p>
+            <p className="text-xs text-flux-muted line-clamp-2">{d.description}</p>
           )}
           {/* Weight bars */}
           <div className="space-y-1.5">
             {Object.entries(d.weights as Record<string, number>).map(([dim, val]) => (
               <div key={dim} className="flex items-center gap-2 text-xs">
-                <span className="w-20 text-flux-muted/50 capitalize">{dim}</span>
-                <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <span className="w-20 text-flux-muted capitalize">{dim}</span>
+                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-flux-accent/70 rounded-full"
+                    className="h-full bg-flux-blue/70 rounded-full"
                     style={{ width: `${(val / 5) * 100}%` }}
                   />
                 </div>
-                <span className="w-6 text-right text-flux-muted/40">{val}</span>
+                <span className="w-6 text-right text-gray-400">{val}</span>
               </div>
             ))}
           </div>
         </div>
       ))}
       {directors.length === 0 && (
-        <p className="text-center text-flux-muted/40 py-8 col-span-2">
+        <p className="text-center text-gray-400 py-8 col-span-2">
           No directors found
         </p>
       )}
@@ -570,9 +570,9 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
   return (
     <div className="space-y-8">
       {/* Full Pipeline */}
-      <section className="bg-flux-accent/10 border border-flux-accent/20 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-flux-accent mb-2">Run Full Data Pipeline</h3>
-        <p className="text-xs text-flux-muted/70 mb-4">
+      <section className="bg-flux-muted-blue border border-flux-accent/20 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-flux-blue mb-2">Run Full Data Pipeline</h3>
+        <p className="text-xs text-flux-muted mb-4">
           Runs 1) DB Sync (Upsert), 2) Neo4j Graph Rebuild, and 3) Vector Embedding Generation sequentially. Use this after replacing raw Excel files.
         </p>
         <div className="flex items-center gap-3">
@@ -602,17 +602,17 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
       </section>
 
       {/* Sync from default Excel */}
-      <section className="bg-flux-deeper/60 border border-white/10 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-white mb-2">Manual Data Sync</h3>
-        <p className="text-xs text-flux-muted/50 mb-4">
-          Sync raw Excel files from <code className="text-flux-accent">data/raw/</code> into PostgreSQL only.
+      <section className="bg-white border border-flux-border rounded-xl p-6">
+        <h3 className="text-base font-semibold text-flux-dark mb-2">Manual Data Sync</h3>
+        <p className="text-xs text-flux-muted mb-4">
+          Sync raw Excel files from <code className="text-flux-blue">data/raw/</code> into PostgreSQL only.
         </p>
         <div className="flex items-center gap-3">
           <ActionButton onClick={handleSync} loading={loading === "sync"} variant="secondary">
             Sync DB Only
           </ActionButton>
           {syncResult && loading !== "full" && !syncResult.status && (
-            <span className="text-xs text-flux-muted/60">
+            <span className="text-xs text-flux-muted">
               {syncResult.error
                 ? syncResult.error
                 : `M:${syncResult.methods_inserted} C:${syncResult.cases_inserted} D:${syncResult.directors_inserted}`}
@@ -622,16 +622,16 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
       </section>
 
       {/* Excel Upload */}
-      <section className="bg-flux-deeper/60 border border-white/10 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-white mb-2">Excel Upload</h3>
-        <p className="text-xs text-flux-muted/50 mb-4">
+      <section className="bg-white border border-flux-border rounded-xl p-6">
+        <h3 className="text-base font-semibold text-flux-dark mb-2">Excel Upload</h3>
+        <p className="text-xs text-flux-muted mb-4">
           Upload an .xlsx file to add new records to a specific dataset
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={uploadDatasetType}
             onChange={(e) => setUploadDatasetType(e.target.value)}
-            className="bg-white/10 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="bg-gray-100 border border-flux-border rounded-lg px-3 py-2 text-sm text-flux-dark"
           >
             <option value="methods">Methods</option>
             <option value="cases">Cases</option>
@@ -641,13 +641,13 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
             ref={fileRef}
             type="file"
             accept=".xlsx,.xls"
-            className="text-sm text-flux-muted/70 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-white/10 file:text-flux-muted file:text-sm file:cursor-pointer"
+            className="text-sm text-flux-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-gray-100 file:text-flux-muted file:text-sm file:cursor-pointer"
           />
           <ActionButton onClick={handleUpload} loading={loading === "upload"} variant="secondary">
             Upload
           </ActionButton>
           {uploadResult && (
-            <span className="text-xs text-flux-muted/60">
+            <span className="text-xs text-flux-muted">
               {uploadResult.error
                 ? uploadResult.error
                 : `${uploadResult.inserted} records inserted from ${uploadResult.filename}`}
@@ -657,9 +657,9 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
       </section>
 
       {/* Graph Build */}
-      <section className="bg-flux-deeper/60 border border-white/10 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-white mb-2">Neo4j Graph Build</h3>
-        <p className="text-xs text-flux-muted/50 mb-4">
+      <section className="bg-white border border-flux-border rounded-xl p-6">
+        <h3 className="text-base font-semibold text-flux-dark mb-2">Neo4j Graph Build</h3>
+        <p className="text-xs text-flux-muted mb-4">
           Build ontology graph from PostgreSQL data. Creates nodes, edges, and similarity links.
         </p>
         <div className="flex items-center gap-3">
@@ -674,7 +674,7 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
             Rebuild (Clear + Build)
           </ActionButton>
           {graphResult && (
-            <span className="text-xs text-flux-muted/60">
+            <span className="text-xs text-flux-muted">
               {graphResult.error
                 ? graphResult.error
                 : `Nodes: M${graphResult.methods_nodes} C${graphResult.cases_nodes} D${graphResult.directors_nodes} | Edges: Pref${graphResult.director_preferences} Sim${graphResult.case_similarity} Rel${graphResult.method_relatedness}`}
@@ -684,9 +684,9 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
       </section>
 
       {/* Embeddings */}
-      <section className="bg-flux-deeper/60 border border-white/10 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-white mb-2">Embedding Pipeline</h3>
-        <p className="text-xs text-flux-muted/50 mb-4">
+      <section className="bg-white border border-flux-border rounded-xl p-6">
+        <h3 className="text-base font-semibold text-flux-dark mb-2">Embedding Pipeline</h3>
+        <p className="text-xs text-flux-muted mb-4">
           Generate vector embeddings for methods and cases. Only processes records without embeddings unless forced.
         </p>
         <div className="flex items-center gap-3">
@@ -704,7 +704,7 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
             Force Re-embed All
           </ActionButton>
           {embResult && (
-            <span className="text-xs text-flux-muted/60">
+            <span className="text-xs text-flux-muted">
               {embResult.error
                 ? embResult.error
                 : `Methods: ${embResult.methods?.embedded}/${embResult.methods?.total} | Cases: ${embResult.cases?.embedded}/${embResult.cases?.total}`}
@@ -743,26 +743,26 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">
-          Admin<span className="text-flux-accent">.</span>
+        <h1 className="text-2xl font-bold text-flux-dark">
+          Admin<span className="text-flux-blue">.</span>
         </h1>
         <button
           onClick={refreshHealth}
-          className="text-xs text-flux-muted/50 hover:text-white transition"
+          className="text-xs text-flux-muted hover:text-flux-blue transition"
         >
           Refresh
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white/5 rounded-xl p-1">
+      <div className="flex gap-1 bg-gray-50 rounded-xl p-1">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tab === t.key
-                ? "bg-flux-accent text-white"
-                : "text-flux-muted/60 hover:text-white hover:bg-white/10"
+                ? "bg-flux-blue text-flux-dark"
+                : "text-flux-muted hover:text-flux-blue hover:bg-gray-200"
               }`}
           >
             {t.label}

@@ -15,10 +15,10 @@ interface Slide {
 }
 
 const PHASE_COLORS: Record<string, string> = {
-  cover: "from-flux-dark to-flux-deeper",
-  phase1: "from-blue-900/30 to-flux-dark",
-  phase2: "from-purple-900/30 to-flux-dark",
-  phase3: "from-flux-accent/10 to-flux-dark",
+  cover: "from-gray-800 to-gray-900",
+  phase1: "from-blue-600 to-blue-800",
+  phase2: "from-purple-600 to-purple-800",
+  phase3: "from-flux-blue to-blue-800",
 };
 
 function ResultContent() {
@@ -41,7 +41,7 @@ function ResultContent() {
 
   if (!slides.length) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] text-flux-muted/50">
+      <div className="flex items-center justify-center min-h-[50vh] text-flux-muted">
         Loading slides...
       </div>
     );
@@ -52,10 +52,10 @@ function ResultContent() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
+        <h1 className="text-2xl font-extrabold text-flux-dark">{title}</h1>
         <a
           href={getPptxUrl(projectId!)}
-          className="px-4 py-2 bg-flux-accent text-white rounded-lg text-sm hover:bg-flux-accent-light transition"
+          className="px-4 py-2 bg-flux-blue text-white rounded-lg text-sm hover:bg-flux-blue-hover transition font-medium"
           target="_blank"
         >
           Download PPTX
@@ -64,26 +64,26 @@ function ResultContent() {
 
       {/* Slide preview */}
       <div
-        className={`relative w-full aspect-[16/9] rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br ${PHASE_COLORS[slide.phase] || PHASE_COLORS.cover
-          } mb-6`}
+        className={`relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br ${PHASE_COLORS[slide.phase] || PHASE_COLORS.cover
+          } mb-6 shadow-lg`}
       >
         <div className="absolute inset-0 p-12 flex flex-col justify-center">
           {slide.phase && (
-            <div className="text-xs font-semibold text-flux-accent uppercase tracking-widest mb-4">
+            <div className="text-xs font-semibold text-blue-200 uppercase tracking-widest mb-4">
               {slide.phase}
             </div>
           )}
           <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
           {slide.subtitle && (
-            <p className="text-lg text-flux-accent mb-4">{slide.subtitle}</p>
+            <p className="text-lg text-blue-200 mb-4">{slide.subtitle}</p>
           )}
           {slide.body && (
-            <p className="text-sm text-flux-muted/70 whitespace-pre-wrap max-h-[50%] overflow-y-auto">
+            <p className="text-sm text-white/80 whitespace-pre-wrap max-h-[50%] overflow-y-auto">
               {slide.body.slice(0, 1000)}
             </p>
           )}
           {slide.key_points && (
-            <div className="mt-4 text-sm text-white/80">{slide.key_points}</div>
+            <div className="mt-4 text-sm text-white/90">{slide.key_points}</div>
           )}
         </div>
       </div>
@@ -93,17 +93,17 @@ function ResultContent() {
         <button
           onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
           disabled={currentSlide === 0}
-          className="px-4 py-2 border border-white/10 rounded-lg text-sm hover:border-white/30 transition disabled:opacity-30"
+          className="px-4 py-2 border border-flux-border rounded-lg text-sm hover:border-gray-400 text-flux-dark transition disabled:opacity-30"
         >
           ← Previous
         </button>
-        <span className="text-sm text-flux-muted/50">
+        <span className="text-sm text-flux-muted">
           {currentSlide + 1} / {slides.length}
         </span>
         <button
           onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
           disabled={currentSlide === slides.length - 1}
-          className="px-4 py-2 border border-white/10 rounded-lg text-sm hover:border-white/30 transition disabled:opacity-30"
+          className="px-4 py-2 border border-flux-border rounded-lg text-sm hover:border-gray-400 text-flux-dark transition disabled:opacity-30"
         >
           Next →
         </button>
@@ -116,12 +116,12 @@ function ResultContent() {
             key={i}
             onClick={() => setCurrentSlide(i)}
             className={`flex-shrink-0 w-32 h-20 rounded-lg border text-left p-2 transition ${i === currentSlide
-                ? "border-flux-accent bg-flux-accent/10"
-                : "border-white/10 hover:border-white/20"
+              ? "border-flux-blue bg-flux-muted-blue"
+              : "border-flux-border bg-white hover:border-gray-300"
               }`}
           >
-            <div className="text-[8px] text-flux-accent">{s.phase}</div>
-            <div className="text-[10px] text-white line-clamp-2">{s.title}</div>
+            <div className="text-[8px] text-flux-blue">{s.phase}</div>
+            <div className="text-[10px] text-flux-dark line-clamp-2">{s.title}</div>
           </button>
         ))}
       </div>
@@ -132,7 +132,7 @@ function ResultContent() {
 export default function ResultPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[50vh] text-flux-muted/50">
+      <div className="flex items-center justify-center min-h-[50vh] text-flux-muted">
         Loading...
       </div>
     }>

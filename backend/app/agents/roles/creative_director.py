@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.llm.base import LLMResponse
 from app.services.llm.router import get_llm_for_step
 from app.services.rag import RAGService
-
-PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "creative_director.md"
+from app.agents.prompt_loader import load_agent_prompt
 
 STEP_CONFIG = {
     "s7": {
@@ -34,7 +33,7 @@ async def run_step(
 ) -> dict:
     """Execute a single CD step."""
     config = STEP_CONFIG[step_key]
-    system_prompt = PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = load_agent_prompt("creative_director")
 
     context_parts = [f"## 클라이언트 브리프\n{brief_context}"]
     for k, v in previous_outputs.items():

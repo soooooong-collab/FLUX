@@ -8,8 +8,7 @@ from pathlib import Path
 from app.services.llm.base import LLMResponse
 from app.services.llm.router import get_llm_for_step
 from app.agents.tools.web_search import execute_web_search
-
-PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "account_planner.md"
+from app.agents.prompt_loader import load_agent_prompt
 
 STEP_CONFIG = {
     "s1": {
@@ -35,7 +34,7 @@ async def run_step(
 ) -> dict:
     """Execute a single AP step and return structured output."""
     config = STEP_CONFIG[step_key]
-    system_prompt = PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = load_agent_prompt("account_planner")
 
     # Build context from previous steps
     context_parts = [f"## 클라이언트 브리프\n{brief_context}"]

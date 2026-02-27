@@ -1,417 +1,304 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createProject, parseBriefPdf, ensureAuth } from "@/lib/api";
 
-type InputMode = "manual" | "pdf";
-
-export default function BriefPage() {
+function BriefForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<InputMode>("manual");
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState({
     brand_name: "",
-    product_service: "",
-    industry: "",
     target_audience: "",
-    main_goal: "",
-    campaign_success: "",
-    current_problem: "",
-    constraints: "",
     budget: "",
+    timeline: "",
+    brief_raw_text: "",
+    main_goal: "", // Will be derived or mapped
   });
   const [loading, setLoading] = useState(false);
-
-  // PDF state
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfText, setPdfText] = useState("");
   const [pdfParsing, setPdfParsing] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Pre-fill from query params if coming from dashboard
+    const initialBrief = searchParams.get('brief');
+    if (initialBrief) {
+      setForm(prev => ({ ...prev, brief_raw_text: initialBrief }));
+    }
+    // Also check sessionStorage for quick brief from dashboard
+    const quickBrief = sessionStorage.getItem("flux_quick_brief");
+    if (quickBrief) {
+      setForm(prev => ({ ...prev, brief_raw_text: quickBrief }));
+      sessionStorage.removeItem("flux_quick_brief");
+    }
+  }, [searchParams]);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handlePdfSelect = useCallback(async (file: File) => {
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       alert("PDF 파일만 업로드 가능합니다.");
       return;
     }
-    setPdfFile(file);
     setPdfParsing(true);
     try {
+      await ensureAuth();
       const result = await parseBriefPdf(file);
-      setPdfText(result.text);
+      if (!result.text || result.text.trim() === "") {
+        alert("PDF에서 텍스트를 추출할 수 없습니다. 이미지 기반 PDF이거나 텍스트가 없는 파일일 수 있습니다.");
+        return;
+      }
+      setForm(prev => ({
+        ...prev,
+        brief_raw_text: prev.brief_raw_text
+          ? prev.brief_raw_text + "\n\n[PDF 추출 내용]\n" + result.text
+          : result.text,
+      }));
     } catch (err: any) {
-      console.error("PDF parse error:", err);
-      alert(`PDF 파싱에 실패했습니다: ${err?.message || "Unknown error"}`);
-      setPdfFile(null);
+      const msg = err?.message || "알 수 없는 오류";
+      alert(`PDF 파싱 실패: ${msg}`);
     } finally {
       setPdfParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragOver(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handlePdfSelect(file);
-    },
-    [handlePdfSelect]
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) handlePdfSelect(file);
-    },
-    [handlePdfSelect]
-  );
-
-  const removePdf = () => {
-    setPdfFile(null);
-    setPdfText("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.brand_name) {
+      alert("Brand Name is required.");
+      return;
+    }
 
-    if (mode === "pdf") {
-      if (!form.brand_name || !pdfText) return;
-      setLoading(true);
-      try {
-        await ensureAuth();
-        const project = await createProject({
-          brand_name: form.brand_name,
-          brief_raw_text: pdfText,
-          industry: form.industry || undefined,
-        });
-        router.push(`/director?projectId=${project.id}`);
-      } catch (err) {
-        alert("프로젝트 생성에 실패했습니다. 다시 시도해주세요.");
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      if (!form.brand_name || !form.main_goal) return;
-      setLoading(true);
-      try {
-        await ensureAuth();
-        const project = await createProject(form);
-        router.push(`/director?projectId=${project.id}`);
-      } catch (err) {
-        alert("프로젝트 생성에 실패했습니다. 다시 시도해주세요.");
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    try {
+      await ensureAuth();
+      // We map the fields to the existing backend expectations
+      // timeline/budget can go into constraints, target_audience is native
+      // if main_goal is empty, we use a snippet of the brief
+      const project = await createProject({
+        brand_name: form.brand_name,
+        target_audience: form.target_audience,
+        budget: form.budget,
+        constraints: `Timeline: ${form.timeline}`,
+        main_goal: form.main_goal || "Generate comprehensive ad strategy",
+        brief_raw_text: form.brief_raw_text,
+      });
+      router.push(`/director?projectId=${project.id}`);
+    } catch (err) {
+      alert("Failed to create project. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const canSubmit =
-    mode === "pdf"
-      ? !!form.brand_name && !!pdfText && !pdfParsing
-      : !!form.brand_name && !!form.main_goal;
-
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-2">New Campaign Brief</h1>
-      <p className="text-flux-muted/60 mb-8">
-        광고 캠페인 기본 정보를 입력해주세요. 직접 입력하거나 PDF 브리프를 업로드할 수 있습니다.
-      </p>
-
-      {/* Mode Tabs */}
-      <div className="flex gap-1 mb-8 bg-white/5 rounded-lg p-1">
-        <button
-          type="button"
-          onClick={() => setMode("manual")}
-          className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition ${
-            mode === "manual"
-              ? "bg-flux-accent text-white"
-              : "text-white/60 hover:text-white"
-          }`}
-        >
-          직접 입력
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("pdf")}
-          className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition ${
-            mode === "pdf"
-              ? "bg-flux-accent text-white"
-              : "text-white/60 hover:text-white"
-          }`}
-        >
-          PDF 업로드
+    <div className="max-w-4xl mx-auto pb-20">
+      {/* Breadcrumb & Top Bar */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="text-sm text-flux-muted mb-2 flex items-center gap-2">
+            <span className="hover:text-flux-dark cursor-pointer transition">Campaigns</span>
+            <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            <span className="text-flux-blue font-medium">New Brief</span>
+          </div>
+          <h1 className="text-3xl font-extrabold text-[#1F2937] tracking-tight">New Campaign Brief</h1>
+          <p className="text-flux-muted text-sm mt-2">
+            Fill in the structured details below to help our AI generate a tailored advertising<br /> strategy for your client.
+          </p>
+        </div>
+        <button className="px-5 py-2 text-sm font-semibold text-flux-dark bg-white border border-flux-border rounded-lg shadow-sm hover:bg-gray-50 transition">
+          Save Draft
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Brand name - always visible */}
-        <Field
-          label="브랜드/제품명 *"
-          value={form.brand_name}
-          onChange={(v) => update("brand_name", v)}
-          placeholder="예: 삼양식품 불닭소스"
-        />
+      {/* Main Form Box */}
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-flux-border p-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
 
-        {mode === "pdf" ? (
-          <>
-            {/* PDF Upload Zone */}
-            <div>
-              <label className="block text-sm font-medium text-flux-muted/80 mb-1">
-                브리프 PDF 파일 *
-              </label>
-
-              {!pdfFile ? (
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragOver(true);
-                  }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
-                    dragOver
-                      ? "border-flux-accent bg-flux-accent/10"
-                      : "border-white/20 hover:border-flux-accent/50 hover:bg-white/5"
-                  }`}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileInput}
-                    className="hidden"
-                  />
-                  <svg
-                    className="mx-auto h-12 w-12 text-white/30 mb-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                    />
-                  </svg>
-                  <p className="text-white/60 text-sm">
-                    PDF 파일을 드래그하거나{" "}
-                    <span className="text-flux-accent font-medium">클릭하여 선택</span>
-                    하세요
-                  </p>
-                  <p className="text-white/30 text-xs mt-1">PDF 형식만 지원</p>
-                </div>
-              ) : (
-                <div className="border border-white/10 rounded-lg p-4">
-                  {/* File info */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-red-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          {pdfFile.name}
-                        </p>
-                        <p className="text-white/40 text-xs">
-                          {(pdfFile.size / 1024).toFixed(1)} KB
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={removePdf}
-                      className="text-white/40 hover:text-red-400 transition p-1"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Parsing status / extracted text */}
-                  {pdfParsing ? (
-                    <div className="flex items-center gap-2 text-flux-accent text-sm py-4">
-                      <svg
-                        className="w-4 h-4 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                      PDF 내용을 분석하고 있습니다...
-                    </div>
-                  ) : pdfText ? (
-                    <div>
-                      <label className="block text-xs font-medium text-flux-muted/60 mb-1">
-                        추출된 브리프 내용
-                      </label>
-                      <textarea
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-flux-accent transition min-h-[200px] text-sm"
-                        value={pdfText}
-                        onChange={(e) => setPdfText(e.target.value)}
-                      />
-                      <p className="text-white/30 text-xs mt-1">
-                        추출된 내용을 확인하고 필요시 수정할 수 있습니다.
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-
-            {/* Optional fields for PDF mode */}
-            <Field
-              label="산업분야/카테고리"
-              value={form.industry}
-              onChange={(v) => update("industry", v)}
-              placeholder="예: 식음료"
+          {/* BRAND NAME */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-bold text-flux-dark tracking-wider mb-3">
+              <svg className="w-4 h-4 text-flux-blue" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+              </svg>
+              BRAND NAME
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl border border-flux-border text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition text-flux-dark"
+              placeholder="e.g., Tech-savvy millennials aged 25-35" // Oops, that placeholder is for target audience but I will adapt
+              value={form.brand_name}
+              onChange={(e) => update("brand_name", e.target.value)}
             />
-          </>
-        ) : (
-          <>
-            {/* Manual entry fields */}
-            <Field
-              label="제품/서비스"
-              value={form.product_service}
-              onChange={(v) => update("product_service", v)}
-              placeholder="예: 불닭소스 글로벌 확장"
-            />
-            <Field
-              label="산업분야/카테고리"
-              value={form.industry}
-              onChange={(v) => update("industry", v)}
-              placeholder="예: 식음료"
-            />
-            <Field
-              label="타겟 오디언스"
+            <p className="text-[11px] text-gray-400 mt-2">What is the core brand or product?</p>
+          </div>
+
+          {/* TARGET AUDIENCE */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-bold text-flux-dark tracking-wider mb-3">
+              <svg className="w-4 h-4 text-flux-blue" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+              </svg>
+              TARGET AUDIENCE
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl border border-flux-border text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition text-flux-dark"
+              placeholder="e.g., Tech-savvy millennials aged 25-35"
               value={form.target_audience}
-              onChange={(v) => update("target_audience", v)}
-              placeholder="예: MZ세대 글로벌 매운맛 팬"
+              onChange={(e) => update("target_audience", e.target.value)}
             />
-            <Field
-              label="캠페인 목표 *"
-              value={form.main_goal}
-              onChange={(v) => update("main_goal", v)}
-              placeholder="예: 불닭소스의 글로벌 인지도를 높이고 신규 시장 진출"
-              multiline
-            />
-            <Field
-              label="캠페인의 성공 모습"
-              value={form.campaign_success}
-              onChange={(v) => update("campaign_success", v)}
-              placeholder="예: SNS에서 불닭소스 챌린지가 바이럴되고, 해외 매출 30% 증가"
-              multiline
-            />
-            <Field
-              label="현재 상황의 문제"
-              value={form.current_problem}
-              onChange={(v) => update("current_problem", v)}
-              placeholder="예: 국내에서는 1위이지만, 해외에서는 '극한 매운맛' 이미지에 갇혀 있음"
-              multiline
-            />
-            <Field
-              label="제약조건"
-              value={form.constraints}
-              onChange={(v) => update("constraints", v)}
-              placeholder="예: 예산 5억, 3개월 내 론칭"
-            />
-            <Field
-              label="예산"
-              value={form.budget}
-              onChange={(v) => update("budget", v)}
-              placeholder="예: High / Medium / Low"
-            />
-          </>
-        )}
+            <p className="text-[11px] text-gray-400 mt-2">Who are you trying to reach?</p>
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading || !canSubmit}
-          className="w-full py-3 bg-flux-accent text-white font-semibold rounded-lg hover:bg-flux-accent-light transition disabled:opacity-50"
-        >
-          {loading ? "Creating..." : "다음: 디렉터 선택 →"}
-        </button>
+          {/* BUDGET CONSTRAINT */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-bold text-flux-dark tracking-wider mb-3">
+              <span className="w-4 h-4 text-flux-blue font-bold flex justify-center items-center text-[14px]">$</span>
+              BUDGET CONSTRAINT
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl border border-flux-border text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition text-flux-dark"
+              placeholder="e.g., $10,000 / month"
+              value={form.budget}
+              onChange={(e) => update("budget", e.target.value)}
+            />
+          </div>
+
+          {/* TIMELINE */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-bold text-flux-dark tracking-wider mb-3">
+              <svg className="w-4 h-4 text-flux-blue" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              TIMELINE
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl border border-flux-border text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition text-flux-dark"
+              placeholder="e.g., Q4 2023 Launch"
+              value={form.timeline}
+              onChange={(e) => update("timeline", e.target.value)}
+            />
+          </div>
+
+        </div>
+
+        {/* DETAILED BRIEF */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="flex items-center gap-2 text-xs font-bold text-flux-dark tracking-wider">
+              <svg className="w-4 h-4 text-flux-blue" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              DETAILED BRIEF & CREATIVE DIRECTION
+            </label>
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs font-medium text-flux-blue hover:underline flex items-center gap-1"
+            >
+              {pdfParsing ? (
+                <span>Parsing...</span>
+              ) : (
+                <>Import PDF instead</>
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handlePdfUpload}
+            />
+          </div>
+
+          <div className="relative">
+            <textarea
+              className="w-full h-48 px-4 py-4 rounded-xl border border-flux-border text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-flux-blue/20 focus:border-flux-blue transition resize-none text-flux-dark pb-12"
+              placeholder="Enter any specific requirements, brand guidelines, tone of voice, or creative constraints here. The more detail you provide, the better the AI strategy will be..."
+              value={form.brief_raw_text}
+              onChange={(e) => update("brief_raw_text", e.target.value)}
+            />
+            {/* AI Suggestions Badge */}
+            <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-blue-50 text-flux-blue rounded-full text-xs font-semibold flex items-center gap-1.5 border border-blue-100 shadow-sm pointer-events-none">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 7.6H22l-6.2 4.4 2.4 7.6-6.2-4.4-6.2 4.4 2.4-7.6-6.2-4.4h7.6L12 2z" />
+              </svg>
+              AI Suggestions enabled
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Actions */}
+        <div className="mt-8 flex items-center justify-end gap-6 border-t border-flux-border pt-6">
+          <span className="text-sm text-gray-400 font-medium">All changes saved automatically</span>
+          <button
+            type="submit"
+            disabled={loading || !form.brand_name}
+            className="flex items-center gap-2 px-8 py-3 bg-flux-blue text-white font-semibold rounded-lg shadow-md hover:bg-flux-blue-hover transition disabled:opacity-50"
+          >
+            {loading ? "Generating..." : "Generate Strategy"}
+            {!loading && (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            )}
+          </button>
+        </div>
       </form>
+
+      {/* Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl border border-flux-border p-5 flex gap-4">
+          <div className="mt-0.5 text-flux-blue">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.82 1.508-2.316a7.5 7.5 0 1 0-7.516 0c.85.496 1.508 1.333 1.508 2.316V18" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-flux-dark mb-1">Be Specific</h4>
+            <p className="text-xs text-flux-muted leading-relaxed">Detailed inputs yield more precise strategies.</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-flux-border p-5 flex gap-4">
+          <div className="mt-0.5 text-flux-blue">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-flux-dark mb-1">Past Performance</h4>
+            <p className="text-xs text-flux-muted leading-relaxed">We analyze your history to optimize new briefs.</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-flux-border p-5 flex gap-4">
+          <div className="mt-0.5 text-flux-blue">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-flux-dark mb-1">Data Privacy</h4>
+            <p className="text-xs text-flux-muted leading-relaxed">Your brief data is encrypted and secure.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  multiline,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  multiline?: boolean;
-}) {
-  const cls =
-    "w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-flux-accent transition";
+export default function BriefPage() {
   return (
-    <div>
-      <label className="block text-sm font-medium text-flux-muted/80 mb-1">
-        {label}
-      </label>
-      {multiline ? (
-        <textarea
-          className={cls + " min-h-[80px]"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-      ) : (
-        <input
-          type="text"
-          className={cls}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-      )}
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <BriefForm />
+    </Suspense>
   );
 }

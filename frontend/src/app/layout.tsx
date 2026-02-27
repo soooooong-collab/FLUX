@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import NavBar from "@/components/NavBar";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "FLUX — AI Ad Strategy Generator",
@@ -14,9 +14,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-flux-dark text-flux-muted antialiased">
-        <NavBar />
-        <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
+      <body className="flex h-screen overflow-hidden bg-flux-background text-flux-dark antialiased">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto w-full">
+          <div className="max-w-5xl mx-auto px-8 py-10">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );

@@ -8,8 +8,7 @@ from pathlib import Path
 
 from app.services.llm.base import LLMResponse
 from app.services.llm.router import get_llm_for_step
-
-PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "presentation_designer.md"
+from app.agents.prompt_loader import load_agent_prompt
 
 
 async def generate_slides(
@@ -17,7 +16,7 @@ async def generate_slides(
     all_step_outputs: dict[str, str],
 ) -> list[dict]:
     """Generate slide structure from all step outputs."""
-    system_prompt = PROMPT_PATH.read_text(encoding="utf-8")
+    system_prompt = load_agent_prompt("presentation_designer")
 
     # Build full context
     steps_text = ""

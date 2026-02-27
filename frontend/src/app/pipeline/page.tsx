@@ -88,15 +88,15 @@ function PipelineContent() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pipeline Running</h1>
-          <p className="text-sm text-flux-muted/60">
-            Director: <span className="text-flux-accent">{director}</span>
+          <h1 className="text-2xl font-extrabold text-flux-dark">Pipeline Running</h1>
+          <p className="text-sm text-flux-muted">
+            Director: <span className="text-flux-blue font-semibold">{director}</span>
           </p>
         </div>
         {isComplete && (
           <a
             href={`/result?projectId=${projectId}`}
-            className="px-6 py-2 bg-flux-accent text-white rounded-lg hover:bg-flux-accent-light transition"
+            className="px-6 py-2 bg-flux-blue text-white rounded-lg hover:bg-flux-blue-hover transition font-medium"
           >
             View Results →
           </a>
@@ -104,9 +104,9 @@ function PipelineContent() {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-white/10 rounded-full h-2 mb-8">
+      <div className="w-full bg-flux-border rounded-full h-2 mb-8">
         <div
-          className="bg-flux-accent h-2 rounded-full transition-all duration-500"
+          className="bg-flux-blue h-2 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -120,10 +120,10 @@ function PipelineContent() {
             <div
               key={step}
               className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${isDone
-                ? "bg-flux-accent/20 text-flux-accent"
+                ? "bg-flux-blue/10 text-flux-blue"
                 : isCurrent
-                  ? "bg-white/20 text-white animate-pulse"
-                  : "bg-white/5 text-white/30"
+                  ? "bg-blue-100 text-flux-blue animate-pulse"
+                  : "bg-gray-100 text-gray-400"
                 }`}
             >
               {STEP_LABELS[step] || step}
@@ -137,25 +137,25 @@ function PipelineContent() {
         {events.map((evt, i) => (
           <div
             key={i}
-            className={`p-4 rounded-lg border ${evt.event === "step_complete"
-              ? "border-flux-accent/30 bg-flux-accent/5"
+            className={`p-4 rounded-xl border ${evt.event === "step_complete"
+              ? "border-blue-200 bg-blue-50/50"
               : evt.event === "step_start"
-                ? "border-white/10 bg-white/5"
+                ? "border-flux-border bg-white"
                 : evt.event === "case_retrieved"
-                  ? "border-green-500/30 bg-green-500/5"
+                  ? "border-green-200 bg-green-50"
                   : evt.event === "error"
-                    ? "border-red-500/30 bg-red-500/5"
-                    : "border-white/5 bg-white/[0.02]"
+                    ? "border-red-200 bg-red-50"
+                    : "border-flux-border bg-gray-50"
               }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs text-flux-muted/40">
+              <span className="text-xs text-gray-400">
                 {STEP_PHASES[evt.step_key] || ""}
               </span>
-              <span className="text-xs font-medium text-flux-accent">
+              <span className="text-xs font-medium text-flux-blue">
                 {STEP_LABELS[evt.step_key] || evt.step_key}
               </span>
-              <span className="text-xs text-flux-muted/30">
+              <span className="text-xs text-gray-400">
                 {evt.event === "step_start" && "▶ 시작"}
                 {evt.event === "step_complete" && "✓ 완료"}
                 {evt.event === "step_retry" && "↻ 재시도"}
@@ -163,7 +163,7 @@ function PipelineContent() {
               </span>
             </div>
             {evt.event === "step_complete" && (
-              <p className="text-sm text-flux-muted/70 whitespace-pre-wrap break-words">
+              <p className="text-sm text-flux-muted whitespace-pre-wrap break-words">
                 {evt.data}
               </p>
             )}
@@ -171,8 +171,8 @@ function PipelineContent() {
         ))}
 
         {isRunning && (
-          <div className="flex items-center gap-2 text-flux-muted/50 text-sm">
-            <div className="w-2 h-2 bg-flux-accent rounded-full animate-ping" />
+          <div className="flex items-center gap-2 text-flux-muted text-sm">
+            <div className="w-2 h-2 bg-flux-blue rounded-full animate-ping" />
             Processing...
           </div>
         )}

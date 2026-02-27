@@ -6,16 +6,21 @@ const config: Config = {
     extend: {
       colors: {
         flux: {
-          dark: "#1A1A2E",
-          deeper: "#16213E",
-          accent: "#FF6B35",
-          "accent-light": "#FF8F65",
-          surface: "#0F3460",
-          muted: "#E2E8F0",
+          blue: "#376DF4", // Primary button blue
+          "blue-hover": "#2B5AE8",
+          "muted-blue": "#EBF1FF",
+          dark: "#0F172A", // Slate 900 for dark text
+          surface: "#FFFFFF", // White cards
+          muted: "#64748B", // Slate 500 for secondary text
+          border: "#E2E8F0", // Slate 200 for borders
+          background: "#F8FAFC", // Slate 50 for main background
         },
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'), // optional if needed later
+    require('@tailwindcss/forms'),      // optional but good for inputs
+  ],
 };
 export default config;

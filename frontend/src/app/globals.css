@@ -3,6 +3,6 @@
 @tailwind utilities;
 
 body {
-  background-color: #1A1A2E;
-  color: #E2E8F0;
+  background-color: #F8FAFC; /* Slate 50 */
+  color: #0F172A; /* Slate 900 */
 }
