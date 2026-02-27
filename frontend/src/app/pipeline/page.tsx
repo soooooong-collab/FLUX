@@ -120,10 +120,10 @@ function PipelineContent() {
             <div
               key={step}
               className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${isDone
-                  ? "bg-flux-accent/20 text-flux-accent"
-                  : isCurrent
-                    ? "bg-white/20 text-white animate-pulse"
-                    : "bg-white/5 text-white/30"
+                ? "bg-flux-accent/20 text-flux-accent"
+                : isCurrent
+                  ? "bg-white/20 text-white animate-pulse"
+                  : "bg-white/5 text-white/30"
                 }`}
             >
               {STEP_LABELS[step] || step}
@@ -138,14 +138,14 @@ function PipelineContent() {
           <div
             key={i}
             className={`p-4 rounded-lg border ${evt.event === "step_complete"
-                ? "border-flux-accent/30 bg-flux-accent/5"
-                : evt.event === "step_start"
-                  ? "border-white/10 bg-white/5"
-                  : evt.event === "case_retrieved"
-                    ? "border-green-500/30 bg-green-500/5"
-                    : evt.event === "error"
-                      ? "border-red-500/30 bg-red-500/5"
-                      : "border-white/5 bg-white/[0.02]"
+              ? "border-flux-accent/30 bg-flux-accent/5"
+              : evt.event === "step_start"
+                ? "border-white/10 bg-white/5"
+                : evt.event === "case_retrieved"
+                  ? "border-green-500/30 bg-green-500/5"
+                  : evt.event === "error"
+                    ? "border-red-500/30 bg-red-500/5"
+                    : "border-white/5 bg-white/[0.02]"
               }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -163,7 +163,7 @@ function PipelineContent() {
               </span>
             </div>
             {evt.event === "step_complete" && (
-              <p className="text-sm text-flux-muted/70 line-clamp-3">
+              <p className="text-sm text-flux-muted/70 whitespace-pre-wrap break-words">
                 {evt.data}
               </p>
             )}

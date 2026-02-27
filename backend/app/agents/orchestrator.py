@@ -151,7 +151,7 @@ async def run_pipeline(
             outputs[step_key] = result["output_text"]
 
         all_results.append(result)
-        yield _event("step_complete", step_key, result["output_text"][:500])
+        yield _event("step_complete", step_key, result["output_text"])
 
     # ── Phase 2: Brand Strategist (s4 ~ s6) ──
     discovered_method_names: list[str] | None = None
@@ -196,7 +196,7 @@ async def run_pipeline(
             outputs[step_key] = result["output_text"]
 
         all_results.append(result)
-        yield _event("step_complete", step_key, result["output_text"][:500])
+        yield _event("step_complete", step_key, result["output_text"])
 
     # ── Phase 3: Creative Director (s7 ~ s8) ──
     for step_key in ["s7", "s8"]:
@@ -228,7 +228,7 @@ async def run_pipeline(
             outputs[step_key] = result["output_text"]
 
         all_results.append(result)
-        yield _event("step_complete", step_key, result["output_text"][:500])
+        yield _event("step_complete", step_key, result["output_text"])
 
     # ── Slides Generation ──
     yield _event("step_start", "slides", "Generating presentation")
