@@ -125,6 +125,20 @@ export async function uploadBriefPdf(projectId: string, file: File) {
   return res.json();
 }
 
+// ── Discussion Turn Types ──
+
+export interface DiscussionTurn {
+  step_key: string;
+  speaker: string;
+  speaker_label: string;
+  speaker_label_kr: string;
+  role: "moderator" | "lead" | "support";
+  content: string;
+  turn_number: number;
+  type: "framing" | "analysis" | "reaction" | "synthesis";
+  total_turns: number;
+}
+
 // ── Pipeline ──
 
 export function runPipelineSSE(

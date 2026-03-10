@@ -146,6 +146,7 @@ class StepOutput(Base):
     step_key = Column(String, nullable=False)  # s1 ~ s8
     output_text = Column(Text)
     evidence_refs = Column(JSON)  # [{"type": "method"|"case", "id": ..., "similarity": ...}]
+    discussion_log = Column(JSON)  # [{turn_number, speaker, role, content, type}, ...]
     llm_model_used = Column(String)
     tokens_used = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

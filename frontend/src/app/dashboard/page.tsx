@@ -38,10 +38,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleTemplate = (templateId: string) => {
-    router.push(`/brief?template=${templateId}`);
-  };
-
   return (
     <div className="flex flex-col items-center justify-center max-w-4xl mx-auto py-10">
 
@@ -122,83 +118,6 @@ export default function DashboardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
             </svg>
             Generate Strategy
-          </button>
-        </div>
-      </div>
-
-      {/* Templates Section */}
-      <div className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xs font-semibold text-flux-muted uppercase tracking-wide">
-            Start from a template
-          </h2>
-          <button className="text-sm font-medium text-flux-blue hover:underline">
-            View all
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Template 1: PPC */}
-          <button
-            onClick={() => handleTemplate('ppc')}
-            className="text-left bg-white p-6 rounded-2xl border border-flux-border hover:shadow-md hover:border-blue-200 transition group"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
-                </svg>
-              </div>
-              <svg className="w-5 h-5 text-gray-300 group-hover:text-flux-blue transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-flux-dark mb-2">PPC Campaign</h3>
-            <p className="text-sm text-flux-muted leading-relaxed">
-              Structure a pay-per-click campaign for Google and Social Media ads.
-            </p>
-          </button>
-
-          {/* Template 2: Product Launch */}
-          <button
-            onClick={() => handleTemplate('launch')}
-            className="text-left bg-white p-6 rounded-2xl border border-flux-border hover:shadow-md hover:border-blue-200 transition group"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-500">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.438 4.438 0 0 0 2.746 2.746 4.493 4.493 0 0 0 4.306-1.758c.16-.24.313-.492.459-.753m-8.693-1.28a1.5 1.5 0 0 1-1.36-1.36m-1.36-4.644c-.261.146-.513.3-.753.459a4.493 4.493 0 0 0-1.758 4.306 4.438 4.438 0 0 0 2.746 2.746 4.493 4.493 0 0 0 4.306-1.758c.24-.16.492-.313.753-.459" />
-                </svg>
-              </div>
-              <svg className="w-5 h-5 text-gray-300 group-hover:text-flux-blue transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-flux-dark mb-2">Product Launch</h3>
-            <p className="text-sm text-flux-muted leading-relaxed">
-              Go-to-market strategy including timeline, channels, and key...
-            </p>
-          </button>
-
-          {/* Template 3: Social Media */}
-          <button
-            onClick={() => handleTemplate('social')}
-            className="text-left bg-white p-6 rounded-2xl border border-flux-border hover:shadow-md hover:border-blue-200 transition group"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-500">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-                </svg>
-              </div>
-              <svg className="w-5 h-5 text-gray-300 group-hover:text-flux-blue transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-flux-dark mb-2">Social Media Plan</h3>
-            <p className="text-sm text-flux-muted leading-relaxed">
-              Content calendar framework and engagement tactics for organic...
-            </p>
           </button>
         </div>
       </div>

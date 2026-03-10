@@ -77,9 +77,9 @@ function ActionButton({
 }) {
   const base = "px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40";
   const variants = {
-    primary: "bg-flux-blue hover:bg-flux-blue-hover text-flux-dark",
+    primary: "bg-flux-blue hover:bg-flux-blue-hover text-white",
     secondary: "bg-gray-100 hover:bg-gray-200 text-flux-muted",
-    danger: "bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30",
+    danger: "bg-red-50 hover:bg-red-100 text-red-600 border border-red-200",
   };
   return (
     <button
@@ -272,7 +272,7 @@ function MethodsTab() {
       <div className="flex flex-wrap gap-2">
         <button
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!filter
-              ? "bg-flux-blue text-flux-dark"
+              ? "bg-flux-blue text-white"
               : "bg-gray-100 text-flux-muted hover:bg-gray-200"
             }`}
           onClick={() => setFilter("")}
@@ -283,7 +283,7 @@ function MethodsTab() {
           <button
             key={cat.category}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === cat.category
-                ? "bg-flux-blue text-flux-dark"
+                ? "bg-flux-blue text-white"
                 : "bg-gray-100 text-flux-muted hover:bg-gray-200"
               }`}
             onClick={() => setFilter(cat.category)}
@@ -368,7 +368,7 @@ function CasesTab() {
       <div className="flex flex-wrap gap-2">
         <button
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!industryFilter
-              ? "bg-flux-blue text-flux-dark"
+              ? "bg-flux-blue text-white"
               : "bg-gray-100 text-flux-muted hover:bg-gray-200"
             }`}
           onClick={() => {
@@ -382,7 +382,7 @@ function CasesTab() {
           <button
             key={ind}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${industryFilter === ind
-                ? "bg-flux-blue text-flux-dark"
+                ? "bg-flux-blue text-white"
                 : "bg-gray-100 text-flux-muted hover:bg-gray-200"
               }`}
             onClick={() => {
@@ -570,7 +570,7 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
   return (
     <div className="space-y-8">
       {/* Full Pipeline */}
-      <section className="bg-flux-muted-blue border border-flux-accent/20 rounded-xl p-6">
+      <section className="bg-flux-muted-blue border border-flux-blue/20 rounded-xl p-6">
         <h3 className="text-base font-semibold text-flux-blue mb-2">Run Full Data Pipeline</h3>
         <p className="text-xs text-flux-muted mb-4">
           Runs 1) DB Sync (Upsert), 2) Neo4j Graph Rebuild, and 3) Vector Embedding Generation sequentially. Use this after replacing raw Excel files.
@@ -594,7 +594,7 @@ function DataTab({ refreshHealth }: { refreshHealth: () => void }) {
             Run Full Pipeline
           </ActionButton>
           {syncResult && loading !== "full" && syncResult.status === "success" && (
-            <span className="text-xs text-green-400">
+            <span className="text-xs text-green-600">
               Pipeline completed successfully! (M:{syncResult.sync.methods_upserted}, C:{syncResult.sync.cases_upserted}, D:{syncResult.sync.directors_upserted})
             </span>
           )}
@@ -761,8 +761,8 @@ export default function AdminPage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tab === t.key
-                ? "bg-flux-blue text-flux-dark"
-                : "text-flux-muted hover:text-flux-blue hover:bg-gray-200"
+                ? "bg-flux-blue text-white shadow-sm"
+                : "text-flux-muted hover:text-flux-dark hover:bg-gray-100"
               }`}
           >
             {t.label}

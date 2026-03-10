@@ -79,9 +79,29 @@ async def run_project_pipeline(
     await db.commit()
 
     async def event_stream():
+        # Collect discussion logs per step for DB persistence
+        step_discussion_logs: dict[str, list] = {}
+
         try:
             async for event in run_pipeline(project_id, brief_context, director_type, db):
                 event_type = event["event"]
+
+                # For discussion_turn events, data is already a JSON string
+                if event_type == "discussion_turn":
+                    turn_data = json.loads(event["data"]) if isinstance(event["data"], str) else event["data"]
+                    data_payload = json.dumps({
+                        "step_key": event["step_key"],
+                        "data": turn_data,
+                    }, ensure_ascii=False)
+                    yield f"event: {event_type}\ndata: {data_payload}\n\n"
+
+                    # Collect discussion turns for DB persistence
+                    sk = event["step_key"]
+                    if sk not in step_discussion_logs:
+                        step_discussion_logs[sk] = []
+                    step_discussion_logs[sk].append(turn_data)
+                    continue
+
                 data_payload = json.dumps({
                     "step_key": event["step_key"],
                     "data": event["data"],
@@ -98,21 +118,26 @@ async def run_project_pipeline(
                         )
                     )
                     step_out = existing.scalar_one_or_none()
+                    disc_log = step_discussion_logs.get(step_key)
                     if step_out:
                         step_out.output_text = event["data"]
+                        if disc_log:
+                            step_out.discussion_log = disc_log
                     else:
                         db.add(StepOutput(
                             project_id=project_id,
                             step_key=step_key,
                             output_text=event["data"],
+                            discussion_log=disc_log,
                         ))
                     await db.commit()
 
                 # Save final result
                 if event_type == "pipeline_complete":
                     final_data = json.loads(event["data"])
+                    discussion_logs_all = final_data.get("discussion_logs", {})
 
-                    # Update step outputs with full text
+                    # Update step outputs with full text and discussion logs
                     for key, txt in final_data.get("step_outputs", {}).items():
                         existing = await db.execute(
                             select(StepOutput).where(
@@ -121,13 +146,17 @@ async def run_project_pipeline(
                             )
                         )
                         step_out = existing.scalar_one_or_none()
+                        disc_log = discussion_logs_all.get(key)
                         if step_out:
                             step_out.output_text = txt
+                            if disc_log:
+                                step_out.discussion_log = disc_log
                         else:
                             db.add(StepOutput(
                                 project_id=project_id,
                                 step_key=key,
                                 output_text=txt,
+                                discussion_log=disc_log,
                             ))
 
                     # Save slides
