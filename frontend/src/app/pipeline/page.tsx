@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useState, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { runPipelineSSE, DiscussionTurn } from "@/lib/api";
+import { useSearchParams } from "next/navigation";
+import { runPipelineSSE, DiscussionTurn, getDiscussionTranscript } from "@/lib/api";
 
 /* ── Types ── */
 
@@ -181,13 +181,6 @@ function StepDiscussion({
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Auto-collapse when step completes and next step starts
-  useEffect(() => {
-    if (isComplete && !isActive) {
-      setIsExpanded(false);
-    }
-  }, [isComplete, isActive]);
-
   return (
     <div
       className={`rounded-xl border overflow-hidden transition-all ${
@@ -235,28 +228,11 @@ function StepDiscussion({
         <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
           {turns.map((turn, i) => (
             <DiscussionTurnCard
-              key={`${stepKey}-${turn.turn_number}`}
+              key={`${stepKey}-${turn.turn_number}-${turn.speaker}-${turn.type}-${i}`}
               turn={turn}
               isLatest={i === turns.length - 1 && isActive}
             />
           ))}
-        </div>
-      )}
-
-      {/* Collapsed summary: show synthesis only */}
-      {!isExpanded && isComplete && turns.length > 0 && (
-        <div className="px-4 pb-3 border-t border-gray-100 pt-2">
-          {(() => {
-            const synthesisTurn = turns.find((t) => t.type === "synthesis");
-            if (!synthesisTurn) return null;
-            return (
-              <div className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
-                <span className="text-emerald-600 font-semibold mr-1">종합:</span>
-                {synthesisTurn.content.slice(0, 200)}
-                {synthesisTurn.content.length > 200 && "..."}
-              </div>
-            );
-          })()}
         </div>
       )}
     </div>
@@ -267,7 +243,6 @@ function StepDiscussion({
 
 function PipelineContent() {
   const params = useSearchParams();
-  const router = useRouter();
   const projectId = params.get("projectId");
   const director = params.get("director") || "strategist";
 
@@ -276,17 +251,40 @@ function PipelineContent() {
   const [currentStep, setCurrentStep] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [runAttempt, setRunAttempt] = useState(0);
+  const [transcriptBusy, setTranscriptBusy] = useState<"copy" | "save" | null>(null);
+  const [transcriptNotice, setTranscriptNotice] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const startedRunKeyRef = useRef("");
 
   const handleEvent = useCallback((event: string, data: any) => {
     if (event === "discussion_turn") {
-      const turn: DiscussionTurn = data.data;
+      const turn: DiscussionTurn | undefined = (data?.data || data) as DiscussionTurn | undefined;
+      if (!turn?.step_key) return;
       setDiscussions((prev) => ({
         ...prev,
-        [turn.step_key]: [...(prev[turn.step_key] || []), turn],
+        [turn.step_key]: (() => {
+          const current = prev[turn.step_key] || [];
+          const duplicate = current.some(
+            (t) =>
+              t.turn_number === turn.turn_number &&
+              t.speaker === turn.speaker &&
+              t.type === turn.type &&
+              t.content === turn.content,
+          );
+          if (duplicate) return current;
+          return [...current, turn].sort((a, b) => a.turn_number - b.turn_number);
+        })(),
       }));
       return;
     }
+    if (event === "error") {
+      setErrorMessage(data?.error || "파이프라인 실행 중 오류가 발생했습니다.");
+      setIsRunning(false);
+      return;
+    }
+    if (!data?.step_key) return;
 
     const stepEvent: StepEvent = {
       event,
@@ -303,6 +301,15 @@ function PipelineContent() {
 
   useEffect(() => {
     if (!projectId) return;
+    const runKey = `${projectId}:${director}:${runAttempt}`;
+    if (startedRunKeyRef.current === runKey) return;
+    startedRunKeyRef.current = runKey;
+
+    setEvents([]);
+    setDiscussions({});
+    setCurrentStep("");
+    setIsComplete(false);
+    setErrorMessage("");
     setIsRunning(true);
 
     runPipelineSSE(
@@ -311,14 +318,23 @@ function PipelineContent() {
       handleEvent,
       (err) => {
         console.error("Pipeline error:", err);
+        const msg = typeof err?.message === "string"
+          ? err.message
+          : "파이프라인 실행 중 오류가 발생했습니다.";
+        setErrorMessage(
+          msg.includes("409")
+            ? "이미 실행 중인 프로젝트입니다. 기존 실행이 끝난 뒤 다시 시도해주세요."
+            : msg,
+        );
         setIsRunning(false);
+        setIsComplete(false);
       },
       () => {
         setIsRunning(false);
         setIsComplete(true);
       },
     );
-  }, [projectId, director, handleEvent]);
+  }, [projectId, director, handleEvent, runAttempt]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -327,12 +343,54 @@ function PipelineContent() {
   const completedSteps = events
     .filter((e) => e.event === "step_complete")
     .map((e) => e.step_key);
+  const hasDiscussionTurns = Object.values(discussions).some((turns) => turns.length > 0);
 
   const allSteps = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"];
   const progress =
     (completedSteps.filter((s) => allSteps.includes(s)).length / allSteps.length) * 100;
 
   const directorLabel = DIRECTOR_LABELS[director] || director;
+  const showTranscriptActions = Boolean(projectId) && (isComplete || hasDiscussionTurns);
+
+  const handleCopyTranscript = useCallback(async () => {
+    if (!projectId) return;
+    setTranscriptBusy("copy");
+    setTranscriptNotice("");
+    try {
+      const markdown = await getDiscussionTranscript(projectId);
+      await navigator.clipboard.writeText(markdown);
+      setTranscriptNotice("전체 회의내용 녹취를 클립보드에 복사했습니다.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "전체 회의내용 녹취 복사에 실패했습니다.";
+      setTranscriptNotice(msg);
+    } finally {
+      setTranscriptBusy(null);
+    }
+  }, [projectId]);
+
+  const handleSaveTranscript = useCallback(async () => {
+    if (!projectId) return;
+    setTranscriptBusy("save");
+    setTranscriptNotice("");
+    try {
+      const markdown = await getDiscussionTranscript(projectId);
+      const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `flux_full_transcript_${projectId.slice(0, 8)}.md`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setTranscriptNotice("전체 회의내용 녹취 마크다운 파일을 저장했습니다.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "전체 회의내용 녹취 저장에 실패했습니다.";
+      setTranscriptNotice(msg);
+    } finally {
+      setTranscriptBusy(null);
+    }
+  }, [projectId]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -345,17 +403,60 @@ function PipelineContent() {
             <span className="text-gray-400 ml-2">— AP, BS, CD가 함께 논의합니다</span>
           </p>
         </div>
-        {isComplete && (
-          <a
-            href={`/result?projectId=${projectId}`}
-            className="px-6 py-2.5 bg-flux-blue text-white rounded-lg hover:bg-flux-blue-hover transition font-medium shadow-sm"
-          >
-            결과 보기 →
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          {showTranscriptActions && (
+            <>
+              <button
+                onClick={handleCopyTranscript}
+                disabled={transcriptBusy !== null}
+                className="px-3.5 py-2 border border-flux-border text-flux-dark rounded-lg text-sm hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                {transcriptBusy === "copy" ? "복사 중..." : "전체 녹취 복사"}
+              </button>
+              <button
+                onClick={handleSaveTranscript}
+                disabled={transcriptBusy !== null}
+                className="px-3.5 py-2 border border-flux-border text-flux-dark rounded-lg text-sm hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                {transcriptBusy === "save" ? "저장 중..." : "전체 녹취 저장(.md)"}
+              </button>
+              <a
+                href={`/minutes?projectId=${projectId}`}
+                className="px-3.5 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition"
+              >
+                회의록 보기
+              </a>
+            </>
+          )}
+          {isComplete && (
+            <a
+              href={`/result?projectId=${projectId}`}
+              className="px-6 py-2.5 bg-flux-blue text-white rounded-lg hover:bg-flux-blue-hover transition font-medium shadow-sm"
+            >
+              결과 보기 →
+            </a>
+          )}
+        </div>
       </div>
+      {transcriptNotice && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-700">
+          {transcriptNotice}
+        </div>
+      )}
 
       {/* Progress bar */}
+      {errorMessage && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700 whitespace-pre-wrap break-words">{errorMessage}</p>
+          <button
+            onClick={() => setRunAttempt((prev) => prev + 1)}
+            className="mt-2 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-red-300 text-red-700 hover:bg-red-100 transition"
+          >
+            다시 실행
+          </button>
+        </div>
+      )}
+
       <div className="w-full bg-gray-100 rounded-full h-1.5 mb-6">
         <div
           className="bg-flux-blue h-1.5 rounded-full transition-all duration-700 ease-out"
@@ -436,7 +537,7 @@ function PipelineContent() {
         )}
 
         {/* Running indicator */}
-        {isRunning && !currentStep.startsWith("slide") && (
+        {isRunning && currentStep && !currentStep.startsWith("slide") && (
           <div className="flex items-center gap-2 text-gray-400 text-sm px-1">
             <div className="w-2 h-2 bg-flux-blue rounded-full animate-ping" />
             팀 토론 진행 중...

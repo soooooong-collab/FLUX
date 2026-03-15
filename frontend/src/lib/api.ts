@@ -62,6 +62,21 @@ export function logout(): void {
   localStorage.removeItem("flux_token");
 }
 
+export async function getCurrentUser(): Promise<{ id: string; email: string; display_name: string | null; plan_tier: string } | null> {
+  const res = await fetch(`${API}/api/auth/me`, { headers: authHeaders() });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function deleteProject(id: string) {
+  const res = await fetch(`${API}/api/projects/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`Delete project failed: ${res.status}`);
+  return res.json();
+}
+
 // ── Projects ──
 
 export interface ProjectCreate {
@@ -163,11 +178,45 @@ export function runPipelineSSE(
       return;
     }
     const reader = res.body?.getReader();
-    if (!reader) return;
+    if (!reader) {
+      onError?.(new Error("Pipeline stream is unavailable."));
+      return;
+    }
 
     const decoder = new TextDecoder();
     let buffer = "";
-    let currentEvent = "";
+    let currentEvent = "message";
+    let currentDataLines: string[] = [];
+    let hasServerError = false;
+    let didComplete = false;
+
+    const dispatchEvent = () => {
+      if (currentDataLines.length === 0) {
+        currentEvent = "message";
+        return;
+      }
+
+      const rawData = currentDataLines.join("\n");
+      let payload: any = rawData;
+      try {
+        payload = JSON.parse(rawData);
+      } catch {
+        // Keep raw string payload for non-JSON SSE data.
+      }
+
+      onEvent?.(currentEvent, payload);
+      if (currentEvent === "pipeline_complete") {
+        didComplete = true;
+      }
+      if (currentEvent === "error") {
+        hasServerError = true;
+        const message = typeof payload?.error === "string" ? payload.error : "Pipeline execution failed.";
+        onError?.(new Error(message));
+      }
+
+      currentEvent = "message";
+      currentDataLines = [];
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -177,22 +226,30 @@ export function runPipelineSSE(
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
 
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7);
-        } else if (line.startsWith("data: ") && currentEvent) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            onEvent?.(currentEvent, data);
-            if (currentEvent === "pipeline_complete") {
-              onComplete?.();
-            }
-          } catch { }
-          currentEvent = "";
+      for (const rawLine of lines) {
+        const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+        if (line === "") {
+          dispatchEvent();
+          continue;
+        }
+        if (line.startsWith(":")) continue;
+        if (line.startsWith("event:")) {
+          currentEvent = line.slice(6).trim();
+          continue;
+        }
+        if (line.startsWith("data:")) {
+          currentDataLines.push(line.slice(5).trimStart());
+          continue;
         }
       }
     }
-    onComplete?.();
+    dispatchEvent();
+
+    if (didComplete) {
+      onComplete?.();
+    } else if (!hasServerError) {
+      onError?.(new Error("Pipeline stream disconnected before completion."));
+    }
   }).catch(onError);
 }
 
@@ -202,6 +259,22 @@ export async function getSlides(projectId: string) {
   const res = await fetch(`${API}/api/pipeline/${projectId}/slides`, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Get slides failed: ${res.status}`);
   return res.json();
+}
+
+export async function getDiscussionTranscript(projectId: string) {
+  const res = await fetch(`${API}/api/pipeline/${projectId}/discussion-transcript`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`Get transcript failed: ${res.status}`);
+  return res.text();
+}
+
+export async function getDiscussionMinutes(projectId: string) {
+  const res = await fetch(`${API}/api/pipeline/${projectId}/discussion-minutes`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`Get minutes failed: ${res.status}`);
+  return res.text();
 }
 
 export function getPptxUrl(projectId: string) {
