@@ -3,9 +3,11 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { parseBriefPdf, ensureAuth } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [briefText, setBriefText] = useState("");
   const [pdfParsing, setPdfParsing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,7 +24,7 @@ export default function DashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("PDF 파일만 업로드 가능합니다.");
+      toast("PDF 파일만 업로드 가능합니다.", "error");
       return;
     }
     setPdfParsing(true);
@@ -31,7 +33,7 @@ export default function DashboardPage() {
       const result = await parseBriefPdf(file);
       setBriefText((prev) => prev + (prev ? "\n\n" : "") + result.text);
     } catch (err: any) {
-      alert(`PDF 파싱 실패: ${err?.message || "Unknown error"}`);
+      toast(`PDF 파싱 실패: ${err?.message || "Unknown error"}`, "error");
     } finally {
       setPdfParsing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

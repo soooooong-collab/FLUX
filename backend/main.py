@@ -19,12 +19,19 @@ async def lifespan(app: FastAPI):
 
     # Startup: enable pgvector extension, then create tables
     async with engine.begin() as conn:
+        from sqlalchemy import text
+
         try:
-            from sqlalchemy import text
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         except Exception:
             pass
         await conn.run_sync(Base.metadata.create_all)
+
+        # Lightweight schema patch for legacy DBs (create_all does not add new columns).
+        try:
+            await conn.execute(text("ALTER TABLE step_outputs ADD COLUMN IF NOT EXISTS discussion_log JSON"))
+        except Exception as e:
+            logger.warning(f"Schema patch skipped (discussion_log): {e}")
 
     # Auto-check embedding coverage on startup
     try:

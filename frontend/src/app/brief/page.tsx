@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createProject, parseBriefPdf, ensureAuth } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 
 function BriefForm() {
+  const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -41,7 +43,7 @@ function BriefForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("PDF 파일만 업로드 가능합니다.");
+      toast("PDF 파일만 업로드 가능합니다.", "error");
       return;
     }
     setPdfParsing(true);
@@ -49,7 +51,7 @@ function BriefForm() {
       await ensureAuth();
       const result = await parseBriefPdf(file);
       if (!result.text || result.text.trim() === "") {
-        alert("PDF에서 텍스트를 추출할 수 없습니다. 이미지 기반 PDF이거나 텍스트가 없는 파일일 수 있습니다.");
+        toast("PDF에서 텍스트를 추출할 수 없습니다. 이미지 기반 PDF이거나 텍스트가 없는 파일일 수 있습니다.", "error");
         return;
       }
       setForm(prev => ({
@@ -60,7 +62,7 @@ function BriefForm() {
       }));
     } catch (err: any) {
       const msg = err?.message || "알 수 없는 오류";
-      alert(`PDF 파싱 실패: ${msg}`);
+      toast(`PDF 파싱 실패: ${msg}`, "error");
     } finally {
       setPdfParsing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -70,7 +72,7 @@ function BriefForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.brand_name) {
-      alert("Brand Name is required.");
+      toast("Brand Name is required.", "error");
       return;
     }
 
@@ -90,7 +92,7 @@ function BriefForm() {
       });
       router.push(`/director?projectId=${project.id}`);
     } catch (err) {
-      alert("Failed to create project. Please try again.");
+      toast("Failed to create project. Please try again.", "error");
     } finally {
       setLoading(false);
     }

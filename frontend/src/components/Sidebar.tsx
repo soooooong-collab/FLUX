@@ -1,16 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isLoggedIn, logout } from "@/lib/api";
+import { isLoggedIn, logout, getCurrentUser } from "@/lib/api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+interface UserInfo {
+    display_name: string | null;
+    email: string;
+    plan_tier: string;
+}
+
 export default function Sidebar() {
     const [loggedIn, setLoggedIn] = useState(false);
+    const [user, setUser] = useState<UserInfo | null>(null);
     const pathname = usePathname();
 
     useEffect(() => {
-        setLoggedIn(isLoggedIn());
+        const logged = isLoggedIn();
+        setLoggedIn(logged);
+        if (logged) {
+            getCurrentUser().then((u) => { if (u) setUser(u); });
+        }
     }, []);
 
     // Hide sidebar on login page
@@ -30,9 +41,9 @@ export default function Sidebar() {
             <div>
                 <div className="flex items-center gap-2 px-2 mb-8">
                     <div className="w-8 h-8 bg-flux-blue rounded-lg flex items-center justify-center text-white font-bold">
-                        F
+                        C
                     </div>
-                    <span className="text-xl font-bold text-flux-dark tracking-tight">FLUX AI</span>
+                    <span className="text-xl font-bold text-flux-dark tracking-tight">ConceptOS</span>
                 </div>
 
                 <Link
@@ -87,33 +98,54 @@ export default function Sidebar() {
 
             {/* Bottom Section */}
             <div>
-                <div className="flex items-center gap-3 px-3 py-4 border-t border-flux-border mt-4">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-500 overflow-hidden">
-                        {/* Using a placeholder avatar initials for now */}
-                        SC
+                {loggedIn && user ? (
+                    <>
+                        <div className="flex items-center gap-3 px-3 py-4 border-t border-flux-border mt-4">
+                            <div className="w-10 h-10 bg-flux-muted-blue rounded-full flex items-center justify-center font-bold text-flux-blue overflow-hidden text-sm">
+                                {(user.display_name || user.email)
+                                    .split(/[\s@]+/)
+                                    .slice(0, 2)
+                                    .map((w) => w[0]?.toUpperCase())
+                                    .join("")}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-flux-dark leading-tight truncate">
+                                    {user.display_name || user.email.split("@")[0]}
+                                </p>
+                                <p className="text-xs text-flux-blue font-medium mt-0.5 capitalize">
+                                    {user.plan_tier} Plan
+                                </p>
+                            </div>
+                        </div>
+                        {user.plan_tier === "free" && (
+                            <button className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-flux-dark text-white rounded-lg text-sm font-medium hover:bg-black transition">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                </svg>
+                                Upgrade Plan
+                            </button>
+                        )}
+                        <button
+                            onClick={() => {
+                                logout();
+                                setLoggedIn(false);
+                                setUser(null);
+                                window.location.href = "/";
+                            }}
+                            className="w-full mt-3 text-center text-xs text-red-500 hover:text-red-600 transition"
+                        >
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <div className="border-t border-flux-border mt-4 pt-4">
+                        <Link
+                            href="/login"
+                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-flux-blue text-white rounded-lg text-sm font-semibold hover:bg-flux-blue-hover transition"
+                        >
+                            로그인
+                        </Link>
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-flux-dark leading-tight">Sarah Chen</p>
-                        <p className="text-xs text-flux-blue font-medium mt-0.5">Pro Plan</p>
-                    </div>
-                </div>
-                <button className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-flux-dark text-white rounded-lg text-sm font-medium hover:bg-black transition">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                    </svg>
-                    Upgrade Plan
-                </button>
-                {loggedIn && (
-                    <button
-                        onClick={() => {
-                            logout();
-                            setLoggedIn(false);
-                            window.location.href = "/";
-                        }}
-                        className="w-full mt-3 text-center text-xs text-red-500 hover:text-red-600 transition"
-                    >
-                        Logout
-                    </button>
                 )}
             </div>
         </aside>

@@ -34,9 +34,16 @@ class GeminiProvider(LLMProvider):
             prompt_parts.append(f"[{role}]: {content}")
         prompt = "\n\n".join(prompt_parts)
 
+        output_cap = max(max_tokens, 768)
+        thinking_budget = max(32, min(128, output_cap // 4))
+
         config = types.GenerateContentConfig(
             temperature=temperature,
-            max_output_tokens=max_tokens,
+            max_output_tokens=output_cap,
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=False,
+                thinking_budget=thinking_budget,
+            ),
         )
         if system:
             config.system_instruction = system
@@ -46,11 +53,35 @@ class GeminiProvider(LLMProvider):
             contents=prompt,
             config=config,
         )
+
+        text = self._extract_text(response)
+        if not text:
+            finish_reason = None
+            candidates = getattr(response, "candidates", None) or []
+            if candidates:
+                finish_reason = getattr(candidates[0], "finish_reason", None)
+            text = f"[모델 응답이 비어 있어 핵심 결론만 유지합니다. reason={finish_reason}]"
+
+        usage = getattr(response, "usage_metadata", None)
+        input_tokens = 0
+        output_tokens = 0
+        if usage:
+            input_tokens = (
+                getattr(usage, "prompt_token_count", 0)
+                or getattr(usage, "input_token_count", 0)
+                or 0
+            )
+            output_tokens = (
+                getattr(usage, "candidates_token_count", 0)
+                or getattr(usage, "output_token_count", 0)
+                or 0
+            )
+
         return LLMResponse(
-            text=response.text or "",
+            text=text,
             model=self.model,
-            input_tokens=getattr(response.usage_metadata, "prompt_token_count", 0) if hasattr(response, "usage_metadata") else 0,
-            output_tokens=getattr(response.usage_metadata, "candidates_token_count", 0) if hasattr(response, "usage_metadata") else 0,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
         )
 
     async def embed(self, text: str) -> list[float]:
@@ -66,3 +97,20 @@ class GeminiProvider(LLMProvider):
             contents=texts,
         )
         return [emb.values for emb in response.embeddings]
+
+    @staticmethod
+    def _extract_text(response) -> str:
+        text = getattr(response, "text", None)
+        if isinstance(text, str) and text.strip():
+            return text.strip()
+
+        parts: list[str] = []
+        candidates = getattr(response, "candidates", None) or []
+        for candidate in candidates:
+            content = getattr(candidate, "content", None)
+            for part in (getattr(content, "parts", None) or []):
+                part_text = getattr(part, "text", None)
+                if isinstance(part_text, str) and part_text.strip():
+                    parts.append(part_text.strip())
+
+        return "\n".join(parts).strip()

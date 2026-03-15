@@ -123,7 +123,10 @@ async def run_discussion(
         lead_role, step_key, brief_context, previous_outputs,
         db, method_refs, case_refs,
     )
-    lead_text = lead_result["output_text"]
+    lead_text = _normalize_turn_text(
+        lead_result.get("output_text", ""),
+        f"[{ROLE_LABELS_KR.get(lead_role, lead_role)}] 응답이 비어 있어 핵심 결론만 이어갑니다.",
+    )
     yield _turn(
         turn_number=2,
         speaker=lead_role,
@@ -241,6 +244,11 @@ def _turn(
     return result
 
 
+def _normalize_turn_text(text: str, fallback: str) -> str:
+    cleaned = (text or "").strip()
+    return cleaned if cleaned else fallback
+
+
 def _format_previous_outputs(previous_outputs: dict[str, str]) -> str:
     """Format previous step outputs for prompt context."""
     if not previous_outputs:
@@ -303,7 +311,10 @@ async def _orchestrator_frame(
         temperature=0.7,
         max_tokens=500,
     )
-    return response.text
+    return _normalize_turn_text(
+        response.text,
+        "핵심 쟁점을 정리해 토론을 이어가겠습니다. 브랜드 목표와 타겟 반응의 인과를 중심으로 의견을 주세요.",
+    )
 
 
 async def _run_lead_agent(
@@ -388,7 +399,10 @@ async def _support_react(
         temperature=0.6,
         max_tokens=800,
     )
-    return response.text
+    return _normalize_turn_text(
+        response.text,
+        f"[{support_label}] 관점에서 핵심 근거와 보완 포인트를 간결히 제시합니다.",
+    )
 
 
 async def _orchestrator_synthesize(
@@ -468,4 +482,7 @@ async def _orchestrator_synthesize(
         temperature=0.6,
         max_tokens=2000,
     )
-    return response.text
+    return _normalize_turn_text(
+        response.text,
+        f"[{step_label}] 단계 결론: 팀 의견을 통합해 실행 가능한 단일 전략 방향을 제시합니다.",
+    )

@@ -9,7 +9,6 @@ Available API keys에 따라 자동 폴백:
 from __future__ import annotations
 
 import logging
-from functools import lru_cache
 
 from app.core.config import get_settings
 from app.services.llm.base import LLMProvider
@@ -40,6 +39,70 @@ DEFAULT_MODEL = "claude-sonnet-4-20250514"
 GEMINI_FALLBACK_MODEL = "gemini-2.5-pro"
 
 
+class FailoverLLMProvider(LLMProvider):
+    """Try multiple providers in order until one succeeds."""
+
+    def __init__(self, providers: list[LLMProvider]):
+        self.providers = providers
+
+    async def generate(
+        self,
+        messages: list[dict],
+        system: str | None = None,
+        tools: list | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 8192,
+    ):
+        last_error: Exception | None = None
+        for provider in self.providers:
+            try:
+                return await provider.generate(
+                    messages=messages,
+                    system=system,
+                    tools=tools,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    "LLM generation failed on %s(%s): %s",
+                    provider.__class__.__name__,
+                    getattr(provider, "model", "unknown"),
+                    str(e),
+                )
+                continue
+        raise RuntimeError(f"All LLM providers failed. Last error: {last_error}") from last_error
+
+    async def embed(self, text: str) -> list[float]:
+        last_error: Exception | None = None
+        for provider in self.providers:
+            try:
+                return await provider.embed(text)
+            except NotImplementedError:
+                continue
+            except Exception as e:
+                last_error = e
+                continue
+        if last_error:
+            raise last_error
+        raise RuntimeError("No embedding-capable provider available in failover chain.")
+
+    async def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        last_error: Exception | None = None
+        for provider in self.providers:
+            try:
+                return await provider.embed_batch(texts)
+            except NotImplementedError:
+                continue
+            except Exception as e:
+                last_error = e
+                continue
+        if last_error:
+            raise last_error
+        raise RuntimeError("No embedding-capable provider available in failover chain.")
+
+
 def _has_key(provider: str) -> bool:
     """Check if the API key for a provider is configured."""
     if provider == "claude":
@@ -51,28 +114,24 @@ def _has_key(provider: str) -> bool:
     return False
 
 
-def _resolve_provider(provider_name: str, model: str) -> tuple[str, str]:
-    """Resolve to an available provider, with automatic fallback."""
+def _provider_chain(provider_name: str, model: str) -> list[tuple[str, str]]:
+    """Build ordered provider chain (preferred first, then fallbacks)."""
+    chain: list[tuple[str, str]] = []
     if _has_key(provider_name):
-        return provider_name, model
+        chain.append((provider_name, model))
+    else:
+        logger.warning("LLM key missing for preferred provider: %s", provider_name)
 
-    # Fallback chain: claude → gemini → openai
     fallbacks = [
         ("gemini", GEMINI_FALLBACK_MODEL),
         ("claude", DEFAULT_MODEL),
         ("openai", "gpt-4o"),
     ]
     for fb_provider, fb_model in fallbacks:
-        if fb_provider != provider_name and _has_key(fb_provider):
-            logger.warning(
-                f"LLM fallback: {provider_name} → {fb_provider} "
-                f"(API key for {provider_name} not configured)"
-            )
-            return fb_provider, fb_model
+        if _has_key(fb_provider) and all(p != fb_provider for p, _ in chain):
+            chain.append((fb_provider, fb_model))
 
-    raise RuntimeError(
-        f"No LLM API key available. Set ANTHROPIC_API_KEY or GEMINI_API_KEY in .env"
-    )
+    return chain
 
 
 def _build_provider(provider_name: str, model: str) -> LLMProvider:
@@ -90,11 +149,17 @@ def _build_provider(provider_name: str, model: str) -> LLMProvider:
 
 def get_llm_for_step(step_key: str) -> LLMProvider:
     """Return the best LLM provider for a given pipeline step.
-    Automatically falls back to available providers if preferred one lacks API key.
+    Automatically falls back to available providers on key-missing or runtime failure.
     """
     provider_name, model = STEP_MODEL_MAP.get(step_key, (DEFAULT_PROVIDER, DEFAULT_MODEL))
-    resolved_provider, resolved_model = _resolve_provider(provider_name, model)
-    return _build_provider(resolved_provider, resolved_model)
+    chain = _provider_chain(provider_name, model)
+    if not chain:
+        raise RuntimeError("No LLM API key available. Set ANTHROPIC_API_KEY or GEMINI_API_KEY in .env")
+
+    providers = [_build_provider(provider, model_name) for provider, model_name in chain]
+    if len(providers) == 1:
+        return providers[0]
+    return FailoverLLMProvider(providers)
 
 
 def get_embedding_provider() -> LLMProvider:

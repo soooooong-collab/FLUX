@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
       <h1 className="text-5xl font-bold text-flux-dark mb-4">
-        FLUX<span className="text-flux-blue">.</span>
+        Concept<span className="text-flux-blue">OS</span>
       </h1>
       <p className="text-xl text-flux-muted mb-2">
         AI-Powered Advertising Strategy & Concept Generator
