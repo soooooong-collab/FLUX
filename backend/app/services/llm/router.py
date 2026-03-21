@@ -29,6 +29,7 @@ STEP_MODEL_MAP: dict[str, tuple[str, str]] = {
     "s7_promise":    ("claude", "claude-sonnet-4-20250514"),
     "s8_creative":   ("claude", "claude-sonnet-4-20250514"),
     "slides":        ("claude", "claude-sonnet-4-20250514"),
+    "meeting_slides": ("claude", "claude-sonnet-4-20250514"),
 }
 
 # Default fallback

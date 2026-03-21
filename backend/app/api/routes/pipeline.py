@@ -653,3 +653,36 @@ async def export_pptx(
         media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
         headers={"Content-Disposition": f'attachment; filename="{project.brand_name}_strategy.pptx"'},
     )
+
+
+@router.get("/{project_id}/export/meeting-pptx")
+async def export_meeting_pptx(
+    project_id: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate Meeting Report PPTX from discussion conclusions."""
+    from app.services.meeting_extract import extract_conclusions
+    from app.agents.roles.meeting_slide_designer import generate_meeting_slides
+    from app.services.meeting_pptx import generate_meeting_pptx
+
+    project, step_outputs = await _load_project_and_latest_steps(
+        project_id, user.id, db,
+    )
+
+    # Phase 1: Extract conclusions
+    conclusions = extract_conclusions(project, step_outputs)
+    if not conclusions["sections"]:
+        raise HTTPException(status_code=404, detail="No completed steps to generate meeting PPTX")
+
+    # Phase 2: Distill via LLM → slides.json
+    slides_data = await generate_meeting_slides(project.brand_name, conclusions)
+
+    # Phase 3: Generate PPTX
+    pptx_bytes = generate_meeting_pptx(slides_data)
+
+    return StreamingResponse(
+        iter([pptx_bytes]),
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        headers={"Content-Disposition": f'attachment; filename="{project.brand_name}_meeting_report.pptx"'},
+    )

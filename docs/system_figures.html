@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLUX v0.1 — System Architecture Figures</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --fg: #1a1a1a;
+    --bg: #ffffff;
+    --border: #c0c0c0;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --accent3: #059669;
+    --accent4: #dc2626;
+    --gray100: #f3f4f6;
+    --gray200: #e5e7eb;
+    --gray300: #d1d5db;
+    --gray500: #6b7280;
+    --gray700: #374151;
+    --blue50: #eff6ff;
+    --blue100: #dbeafe;
+    --blue700: #1d4ed8;
+    --purple50: #f5f3ff;
+    --purple100: #ede9fe;
+    --purple700: #6d28d9;
+    --green50: #ecfdf5;
+    --green100: #d1fae5;
+    --green700: #047857;
+    --orange50: #fff7ed;
+    --orange100: #ffedd5;
+    --orange700: #c2410c;
+    --red50: #fef2f2;
+    --red100: #fee2e2;
+    --red700: #b91c1c;
+    --yellow50: #fefce8;
+    --yellow100: #fef9c3;
+    --yellow700: #a16207;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.6;
+    padding: 40px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--gray500);
+    margin-bottom: 48px;
+    font-style: italic;
+  }
+
+  .figure {
+    margin-bottom: 56px;
+    page-break-inside: avoid;
+  }
+
+  .figure-content {
+    border: 1px solid var(--gray200);
+    border-radius: 2px;
+    padding: 32px 28px;
+    background: var(--bg);
+  }
+
+  .figure-caption {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--gray700);
+    line-height: 1.55;
+    text-align: center;
+  }
+
+  .figure-caption strong {
+    font-weight: 600;
+  }
+
+  /* ─── Figure 1: System Architecture ─── */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .arch-layer {
+    border: 1.5px solid var(--gray300);
+    padding: 16px 20px;
+    position: relative;
+  }
+
+  .arch-layer + .arch-layer {
+    border-top: none;
+  }
+
+  .arch-layer-label {
+    position: absolute;
+    top: -9px;
+    left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--gray500);
+  }
+
+  .arch-boxes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  .arch-box {
+    border: 1.5px solid;
+    border-radius: 3px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 120px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .arch-box .box-title {
+    font-weight: 600;
+    font-size: 12.5px;
+    margin-bottom: 2px;
+  }
+
+  .arch-box .box-sub {
+    font-size: 10.5px;
+    opacity: 0.7;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .arch-box.blue { border-color: var(--blue700); background: var(--blue50); color: var(--blue700); }
+  .arch-box.purple { border-color: var(--purple700); background: var(--purple50); color: var(--purple700); }
+  .arch-box.green { border-color: var(--green700); background: var(--green50); color: var(--green700); }
+  .arch-box.orange { border-color: var(--orange700); background: var(--orange50); color: var(--orange700); }
+  .arch-box.red { border-color: var(--red700); background: var(--red50); color: var(--red700); }
+  .arch-box.gray { border-color: var(--gray500); background: var(--gray100); color: var(--gray700); }
+
+  .arch-arrow {
+    text-align: center;
+    padding: 4px 0;
+    color: var(--gray500);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .arch-arrow-label {
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--gray500);
+    text-transform: uppercase;
+  }
+
+  /* ─── Figure 2: Service Flow ─── */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .flow-step {
+    border: 1.5px solid;
+    border-radius: 3px;
+    padding: 10px 18px;
+    text-align: center;
+    font-size: 12px;
+    min-width: 100px;
+  }
+
+  .flow-step .step-num {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: 2px;
+  }
+
+  .flow-step .step-title {
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+
+  .flow-step .step-detail {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .flow-arrow-h {
+    color: var(--gray500);
+    font-size: 20px;
+  }
+
+  .flow-arrow-v {
+    color: var(--gray500);
+    font-size: 20px;
+    padding: 2px 0;
+  }
+
+  .flow-branch {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    position: relative;
+    margin-top: 0;
+  }
+
+  .flow-branch::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 25%;
+    right: 25%;
+    height: 1.5px;
+    background: var(--gray300);
+  }
+
+  /* ─── Figure 3: Ontology ─── */
+  .onto-container {
+    position: relative;
+    min-height: 380px;
+  }
+
+  .onto-svg {
+    width: 100%;
+    height: 400px;
+  }
+
+  /* ─── Figure 4: Pipeline ─── */
+  .pipeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipeline-phase {
+    border: 1.5px solid;
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .pipeline-phase.phase1 { border-color: var(--blue700); }
+  .pipeline-phase.phase2 { border-color: var(--purple700); }
+  .pipeline-phase.phase3 { border-color: var(--orange700); }
+  .pipeline-phase.phase-final { border-color: var(--green700); }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .phase-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .phase1 .phase-badge { background: var(--blue100); color: var(--blue700); }
+  .phase2 .phase-badge { background: var(--purple100); color: var(--purple700); }
+  .phase3 .phase-badge { background: var(--orange100); color: var(--orange700); }
+  .phase-final .phase-badge { background: var(--green100); color: var(--green700); }
+
+  .phase-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray700);
+  }
+
+  .phase-steps {
+    display: flex;
+    gap: 10px;
+  }
+
+  .p-step {
+    flex: 1;
+    border: 1px solid var(--gray200);
+    border-radius: 2px;
+    padding: 10px 12px;
+    background: var(--gray100);
+  }
+
+  .p-step-key {
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 3px;
+  }
+
+  .p-step-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--fg);
+  }
+
+  .p-step-meta {
+    font-size: 9.5px;
+    color: var(--gray500);
+    line-height: 1.4;
+  }
+
+  .p-step-meta .tag {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 8.5px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .tag.claude { background: var(--orange100); color: var(--orange700); }
+  .tag.gemini { background: var(--blue100); color: var(--blue700); }
+  .tag.rag { background: var(--green100); color: var(--green700); }
+  .tag.web { background: var(--yellow100); color: var(--yellow700); }
+
+  .pipeline-arrow {
+    text-align: center;
+    color: var(--gray500);
+    font-size: 16px;
+    margin: -4px 0;
+  }
+
+  .discussion-box {
+    border: 1px dashed var(--gray300);
+    border-radius: 2px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    background: var(--yellow50);
+  }
+
+  .discussion-box-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--yellow700);
+    margin-bottom: 6px;
+  }
+
+  .discussion-flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 10px;
+    color: var(--gray700);
+  }
+
+  .discussion-flow .d-step {
+    border: 1px solid var(--gray300);
+    border-radius: 2px;
+    padding: 3px 8px;
+    background: white;
+    font-size: 9.5px;
+  }
+
+  .discussion-flow .d-arrow {
+    color: var(--gray500);
+  }
+
+  /* Shared utilities */
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .text-center { text-align: center; }
+  .mt-4 { margin-top: 4px; }
+
+  @media print {
+    body { padding: 20px; }
+    .figure { page-break-inside: avoid; margin-bottom: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>FLUX v0.1: AI-Powered Advertising Strategy Generation System</h1>
+<p class="subtitle">System Architecture and Design — Technical Figures</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Figure 1: System Architecture
+     ═══════════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-content">
+
+    <!-- Client Layer -->
+    <div class="arch-layer" style="border-radius: 3px 3px 0 0;">
+      <div class="arch-layer-label">Presentation Layer</div>
+      <div class="arch-boxes">
+        <div class="arch-box blue" style="min-width: 280px;">
+          <div class="box-title">Web Client</div>
+          <div class="box-sub">Next.js 14 · TypeScript · Tailwind CSS</div>
+          <div style="font-size:10px; margin-top:6px; opacity:0.8;">Brief Input · Pipeline Viewer · Admin Panel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arch-layer" style="border-top: none; padding: 6px 0; border-left: 1.5px solid var(--gray300); border-right: 1.5px solid var(--gray300); border-bottom: none;">
+      <div class="arch-arrow">↕</div>
+      <div class="text-center"><span class="arch-arrow-label">REST API + SSE (Server-Sent Events)</span></div>
+    </div>
+
+    <!-- Application Layer -->
+    <div class="arch-layer">
+      <div class="arch-layer-label">Application Layer — FastAPI (Async)</div>
+      <div class="arch-boxes">
+        <div class="arch-box purple">
+          <div class="box-title">API Routes</div>
+          <div class="box-sub">Auth · Projects<br>Pipeline · Admin</div>
+        </div>
+        <div class="arch-box purple">
+          <div class="box-title">Orchestrator</div>
+          <div class="box-sub">8-Step Pipeline<br>SSE Streaming</div>
+        </div>
+        <div class="arch-box purple">
+          <div class="box-title">Discussion Engine</div>
+          <div class="box-sub">Multi-Agent<br>Team Discussion</div>
+        </div>
+        <div class="arch-box purple">
+          <div class="box-title">Agent Roles</div>
+          <div class="box-sub">AP · BS · CD · PD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Layer -->
+    <div class="arch-layer" style="border-top: none;">
+      <div class="arch-layer-label">Service Layer</div>
+      <div class="arch-boxes">
+        <div class="arch-box green">
+          <div class="box-title">RAG Service</div>
+          <div class="box-sub">Hybrid Search<br>Vector + Graph</div>
+        </div>
+        <div class="arch-box green">
+          <div class="box-title">LLM Router</div>
+          <div class="box-sub">Per-Step Model<br>Assignment + Failover</div>
+        </div>
+        <div class="arch-box green">
+          <div class="box-title">Graph Service</div>
+          <div class="box-sub">Neo4j Ontology<br>Build & Query</div>
+        </div>
+        <div class="arch-box green">
+          <div class="box-title">Embedding Service</div>
+          <div class="box-sub">Gemini 768-dim<br>Batch Pipeline</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arch-layer" style="border: none; padding: 6px 0;">
+      <div class="arch-arrow">↕</div>
+    </div>
+
+    <!-- External Services -->
+    <div class="arch-layer" style="border-radius: 0 0 3px 3px;">
+      <div class="arch-layer-label">Data & External Services</div>
+      <div class="arch-boxes">
+        <div class="arch-box orange">
+          <div class="box-title">PostgreSQL</div>
+          <div class="box-sub">pgvector</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">Users · Projects · Steps<br>Methods · Cases · Directors</div>
+        </div>
+        <div class="arch-box orange">
+          <div class="box-title">Neo4j 5</div>
+          <div class="box-sub">Knowledge Graph</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">Method · Case · Director<br>Industry Nodes</div>
+        </div>
+        <div class="arch-box orange">
+          <div class="box-title">Redis</div>
+          <div class="box-sub">Cache / Queue</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">Session Cache<br>(Reserved)</div>
+        </div>
+        <div class="arch-box red">
+          <div class="box-title">Claude Sonnet 4</div>
+          <div class="box-sub">Anthropic API</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">s1, s3–s8<br>Slides Generation</div>
+        </div>
+        <div class="arch-box red">
+          <div class="box-title">Gemini 2.5 Pro</div>
+          <div class="box-sub">Google AI API</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">s2 Market Analysis<br>Embeddings (768-d)</div>
+        </div>
+        <div class="arch-box gray">
+          <div class="box-title">Serper API</div>
+          <div class="box-sub">Web Search</div>
+          <div style="font-size:9px; margin-top:3px; opacity:0.7;">Market Research<br>(Step s2)</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="figure-caption"><strong>Figure 1.</strong> FLUX v0.1 System Architecture. The system follows a layered architecture with a Next.js presentation layer communicating via REST/SSE with a FastAPI application layer. The service layer provides RAG-based retrieval, LLM routing with per-step model assignment, and knowledge graph operations. Data is persisted across PostgreSQL (with pgvector for 768-dimensional embeddings), Neo4j (ontology graph), and Redis (caching). AP = Account Planner, BS = Brand Strategist, CD = Creative Director, PD = Presentation Designer.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Figure 2: Service Flow
+     ═══════════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-content">
+    <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; font-family: 'IBM Plex Sans', sans-serif;">
+      <defs>
+        <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#6b7280"/>
+        </marker>
+        <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"/>
+        </marker>
+        <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#059669"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1: User Input -->
+      <rect x="20" y="30" width="140" height="60" rx="3" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+      <text x="90" y="55" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">User</text>
+      <text x="90" y="70" text-anchor="middle" font-size="9" fill="#1d4ed8" opacity="0.7">Brief Input</text>
+
+      <!-- Arrow -->
+      <line x1="160" y1="60" x2="195" y2="60" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+
+      <!-- Step 2: Brief Processing -->
+      <rect x="200" y="20" width="150" height="80" rx="3" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+      <text x="275" y="43" text-anchor="middle" font-size="10" font-weight="600" fill="#1d4ed8">Brief Processing</text>
+      <text x="275" y="58" text-anchor="middle" font-size="8.5" fill="#1d4ed8" opacity="0.7">Manual Form</text>
+      <text x="275" y="70" text-anchor="middle" font-size="8.5" fill="#1d4ed8" opacity="0.7">or PDF Upload</text>
+      <text x="275" y="84" text-anchor="middle" font-size="8" fill="#6b7280" font-style="italic">(pdfplumber extraction)</text>
+
+      <!-- Arrow -->
+      <line x1="350" y1="60" x2="385" y2="60" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+
+      <!-- Step 3: Director Selection -->
+      <rect x="390" y="20" width="150" height="80" rx="3" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+      <text x="465" y="43" text-anchor="middle" font-size="10" font-weight="600" fill="#6d28d9">Director Selection</text>
+      <text x="465" y="58" text-anchor="middle" font-size="8.5" fill="#6d28d9" opacity="0.7">6 Archetypes:</text>
+      <text x="465" y="70" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.6">strategist · provocateur</text>
+      <text x="465" y="80" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.6">storyteller · minimalist</text>
+      <text x="465" y="90" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.6">culture · performance</text>
+
+      <!-- Arrow -->
+      <line x1="540" y1="60" x2="575" y2="60" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+
+      <!-- Step 4: Pipeline Execution (large box) -->
+      <rect x="580" y="10" width="200" height="100" rx="3" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+      <text x="680" y="35" text-anchor="middle" font-size="10" font-weight="600" fill="#c2410c">Pipeline Execution</text>
+      <text x="680" y="50" text-anchor="middle" font-size="8.5" fill="#c2410c" opacity="0.7">8 Steps × Team Discussion</text>
+      <text x="680" y="63" text-anchor="middle" font-size="8.5" fill="#c2410c" opacity="0.7">SSE Real-time Streaming</text>
+      <text x="680" y="80" text-anchor="middle" font-size="8" fill="#6b7280" font-style="italic">RAG retrieval per step</text>
+      <text x="680" y="92" text-anchor="middle" font-size="8" fill="#6b7280" font-style="italic">(director-controlled timing)</text>
+
+      <!-- Arrow -->
+      <line x1="780" y1="60" x2="815" y2="60" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+
+      <!-- Step 5: Output -->
+      <rect x="820" y="25" width="120" height="70" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="880" y="50" text-anchor="middle" font-size="10" font-weight="600" fill="#047857">Output</text>
+      <text x="880" y="65" text-anchor="middle" font-size="8.5" fill="#047857" opacity="0.7">Slides JSON</text>
+      <text x="880" y="77" text-anchor="middle" font-size="8.5" fill="#047857" opacity="0.7">→ PPTX Export</text>
+
+      <!-- ═══ SSE Event Stream Detail ═══ -->
+      <text x="480" y="140" text-anchor="middle" font-size="10" font-weight="600" fill="#374151">SSE Event Stream (per step)</text>
+
+      <!-- SSE flow boxes -->
+      <rect x="40" y="160" width="130" height="44" rx="2" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1"/>
+      <text x="105" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#1d4ed8">step_start</text>
+      <text x="105" y="192" text-anchor="middle" font-size="8" fill="#1d4ed8" opacity="0.6">Step initialized</text>
+
+      <line x1="170" y1="182" x2="195" y2="182" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+      <rect x="200" y="160" width="130" height="44" rx="2" fill="#d1fae5" stroke="#047857" stroke-width="1"/>
+      <text x="265" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#047857">methods_retrieved</text>
+      <text x="265" y="192" text-anchor="middle" font-size="8" fill="#047857" opacity="0.6">RAG: methods found</text>
+
+      <line x1="330" y1="182" x2="355" y2="182" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+      <rect x="360" y="160" width="130" height="44" rx="2" fill="#d1fae5" stroke="#047857" stroke-width="1"/>
+      <text x="425" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#047857">case_retrieved</text>
+      <text x="425" y="192" text-anchor="middle" font-size="8" fill="#047857" opacity="0.6">RAG: cases found</text>
+
+      <line x1="490" y1="182" x2="515" y2="182" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+      <rect x="520" y="155" width="155" height="54" rx="2" fill="#fef9c3" stroke="#a16207" stroke-width="1"/>
+      <text x="597" y="174" text-anchor="middle" font-size="9" font-weight="600" fill="#a16207">discussion_turn (×N)</text>
+      <text x="597" y="187" text-anchor="middle" font-size="8" fill="#a16207" opacity="0.6">Speaker, role, content</text>
+      <text x="597" y="199" text-anchor="middle" font-size="8" fill="#a16207" opacity="0.6">Real-time streaming</text>
+
+      <line x1="675" y1="182" x2="700" y2="182" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+      <rect x="705" y="160" width="130" height="44" rx="2" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="770" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#6d28d9">step_complete</text>
+      <text x="770" y="192" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.6">Synthesized output</text>
+
+      <!-- Repeat arrow -->
+      <path d="M 770 210 L 770 230 L 105 230 L 105 210" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowGray)"/>
+      <text x="440" y="226" text-anchor="middle" font-size="8" fill="#6b7280" font-style="italic">Repeat for each step (s1 → s8)</text>
+
+      <!-- Final event -->
+      <line x1="480" y1="240" x2="480" y2="260" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+      <rect x="380" y="265" width="200" height="40" rx="2" fill="#d1fae5" stroke="#047857" stroke-width="1.5"/>
+      <text x="480" y="283" text-anchor="middle" font-size="10" font-weight="600" fill="#047857">pipeline_complete</text>
+      <text x="480" y="296" text-anchor="middle" font-size="8" fill="#047857" opacity="0.6">All outputs + slides_json + token usage</text>
+
+      <!-- ═══ Authentication Flow ═══ -->
+      <text x="480" y="340" text-anchor="middle" font-size="10" font-weight="600" fill="#374151">Authentication Flow</text>
+
+      <rect x="100" y="358" width="120" height="36" rx="2" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/>
+      <text x="160" y="380" text-anchor="middle" font-size="9" font-weight="500" fill="#374151">Client Request</text>
+
+      <line x1="220" y1="376" x2="260" y2="376" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+      <text x="240" y="368" text-anchor="middle" font-size="7.5" fill="#6b7280">JWT</text>
+
+      <rect x="265" y="358" width="120" height="36" rx="2" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1"/>
+      <text x="325" y="375" text-anchor="middle" font-size="9" font-weight="500" fill="#1d4ed8">Auth Middleware</text>
+      <text x="325" y="387" text-anchor="middle" font-size="7.5" fill="#1d4ed8" opacity="0.6">flux_token verify</text>
+
+      <line x1="385" y1="376" x2="425" y2="376" stroke="#6b7280" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+      <rect x="430" y="358" width="120" height="36" rx="2" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="490" y="380" text-anchor="middle" font-size="9" font-weight="500" fill="#6d28d9">API Handler</text>
+
+      <!-- Auto guest -->
+      <line x1="160" y1="394" x2="160" y2="420" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowGray)"/>
+      <rect x="80" y="425" width="160" height="36" rx="2" fill="#fef2f2" stroke="#b91c1c" stroke-width="1"/>
+      <text x="160" y="442" text-anchor="middle" font-size="8.5" font-weight="500" fill="#b91c1c">Auto Guest Registration</text>
+      <text x="160" y="453" text-anchor="middle" font-size="7.5" fill="#b91c1c" opacity="0.6">if no token → ensureAuth()</text>
+
+      <!-- Data export paths -->
+      <text x="740" y="340" text-anchor="middle" font-size="10" font-weight="600" fill="#374151">Export Paths</text>
+
+      <rect x="660" y="358" width="160" height="36" rx="2" fill="#ecfdf5" stroke="#047857" stroke-width="1"/>
+      <text x="740" y="380" text-anchor="middle" font-size="9" font-weight="500" fill="#047857">slides_json → PPTX</text>
+
+      <rect x="660" y="402" width="160" height="36" rx="2" fill="#ecfdf5" stroke="#047857" stroke-width="1"/>
+      <text x="740" y="424" text-anchor="middle" font-size="9" font-weight="500" fill="#047857">Discussion → Minutes (MD)</text>
+
+      <rect x="660" y="446" width="160" height="36" rx="2" fill="#ecfdf5" stroke="#047857" stroke-width="1"/>
+      <text x="740" y="468" text-anchor="middle" font-size="9" font-weight="500" fill="#047857">Discussion → Transcript (MD)</text>
+
+    </svg>
+  </div>
+  <p class="figure-caption"><strong>Figure 2.</strong> Service Flow Diagram. The upper section shows the end-to-end user journey from brief input through director selection and pipeline execution to slide output. The middle section details the SSE event stream protocol: each pipeline step emits a sequence of typed events enabling real-time team discussion visualization. The lower-left shows the JWT-based authentication flow with automatic guest registration. The lower-right shows available export paths.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Figure 3: Ontology Structure (Knowledge Graph)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-content">
+    <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; font-family: 'IBM Plex Sans', sans-serif;">
+      <defs>
+        <marker id="arrowDark" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#374151"/>
+        </marker>
+        <marker id="arrowPurp" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#6d28d9"/>
+        </marker>
+        <marker id="arrowOrange2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#c2410c"/>
+        </marker>
+      </defs>
+
+      <!-- Title area -->
+      <text x="480" y="25" text-anchor="middle" font-size="11" font-weight="600" fill="#374151">3-Layer Ontology — Neo4j Knowledge Graph</text>
+
+      <!-- ═══════════════════════════════════════════════════════
+           Layout: Three layers in a row with wide gaps
+           L1(20–250) gap(80px) L2(330–580) gap(70px) L3(650–930)
+           PREFERS: elbow ABOVE boxes
+           APPLIED_IN: arrow in gap between L1–L2
+           IN_INDUSTRY: straight down below L2
+           ═══════════════════════════════════════════════════════ -->
+
+      <!-- ═══ Layer 1: Methods (Brain) — LEFT ═══ -->
+      <!-- Box: x=20, y=75, w=230, h=200 → ends at x=250, y=275 -->
+      <rect x="20" y="75" width="230" height="200" rx="4" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+      <text x="135" y="95" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8" letter-spacing="1">LAYER 1 — METHODS</text>
+      <text x="135" y="108" text-anchor="middle" font-size="9" fill="#1d4ed8" opacity="0.6">61 Strategy Frameworks</text>
+
+      <!-- Method nodes (2 nodes, simpler) -->
+      <circle cx="80" cy="145" r="22" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.2"/>
+      <text x="80" y="142" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1d4ed8">Method</text>
+      <text x="80" y="153" text-anchor="middle" font-size="6.5" fill="#1d4ed8">POE</text>
+
+      <circle cx="185" cy="145" r="22" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.2"/>
+      <text x="185" y="142" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1d4ed8">Method</text>
+      <text x="185" y="153" text-anchor="middle" font-size="6.5" fill="#1d4ed8">FCB Grid</text>
+
+      <!-- RELATED_TO edge -->
+      <line x1="102" y1="142" x2="163" y2="142" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="132" y="131" text-anchor="middle" font-size="6.5" fill="#3b82f6" font-style="italic">RELATED_TO</text>
+
+      <!-- Properties list -->
+      <text x="38" y="190" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">method_name · category</text>
+      <text x="38" y="202" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">signature_question</text>
+      <text x="38" y="214" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">core_principle · apply_when</text>
+      <text x="38" y="226" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">embedding (768-dim vector)</text>
+      <rect x="36" y="218" width="155" height="12" rx="1" fill="none" stroke="#2563eb" stroke-width="0.8" stroke-dasharray="2,2"/>
+
+      <!-- ═══ Layer 2: Cases (Evidence) — CENTER ═══ -->
+      <!-- Box: x=330, y=75, w=250, h=200 → ends at x=580, y=275 -->
+      <rect x="330" y="75" width="250" height="200" rx="4" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="455" y="95" text-anchor="middle" font-size="10" font-weight="700" fill="#047857" letter-spacing="1">LAYER 2 — CASES</text>
+      <text x="455" y="108" text-anchor="middle" font-size="9" fill="#047857" opacity="0.6">21 Campaign Case Studies</text>
+
+      <!-- Case nodes (2 nodes) -->
+      <circle cx="395" cy="145" r="22" fill="#d1fae5" stroke="#047857" stroke-width="1.2"/>
+      <text x="395" y="142" text-anchor="middle" font-size="7.5" font-weight="600" fill="#047857">Case</text>
+      <text x="395" y="153" text-anchor="middle" font-size="6" fill="#047857">Nike</text>
+
+      <circle cx="510" cy="145" r="22" fill="#d1fae5" stroke="#047857" stroke-width="1.2"/>
+      <text x="510" y="142" text-anchor="middle" font-size="7.5" font-weight="600" fill="#047857">Case</text>
+      <text x="510" y="153" text-anchor="middle" font-size="6" fill="#047857">Samsung</text>
+
+      <!-- SIMILAR_TO edge -->
+      <line x1="417" y1="142" x2="488" y2="142" stroke="#6ee7b7" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="452" y="131" text-anchor="middle" font-size="6.5" fill="#059669" font-style="italic">SIMILAR_TO</text>
+
+      <!-- Properties -->
+      <text x="348" y="190" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">brand · campaign_title</text>
+      <text x="348" y="202" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">industry · target · problem</text>
+      <text x="348" y="214" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">insight · solution · outcomes</text>
+      <text x="348" y="226" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">applied_methods[] · budget_tier</text>
+      <text x="348" y="238" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">embedding (768-dim vector)</text>
+      <rect x="346" y="230" width="155" height="12" rx="1" fill="none" stroke="#059669" stroke-width="0.8" stroke-dasharray="2,2"/>
+
+      <!-- ═══ Layer 3: Directors (Control) — RIGHT ═══ -->
+      <!-- Box: x=650, y=75, w=280, h=200 → ends at x=930, y=275 -->
+      <rect x="650" y="75" width="280" height="200" rx="4" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+      <text x="790" y="95" text-anchor="middle" font-size="10" font-weight="700" fill="#6d28d9" letter-spacing="1">LAYER 3 — DIRECTORS</text>
+      <text x="790" y="108" text-anchor="middle" font-size="9" fill="#6d28d9" opacity="0.6">6 Creative Personas</text>
+
+      <!-- Director nodes — row 1 -->
+      <rect x="670" y="120" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="707" y="137" text-anchor="middle" font-size="7.5" font-weight="600" fill="#6d28d9">Strategist</text>
+
+      <rect x="755" y="120" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="792" y="137" text-anchor="middle" font-size="7.5" font-weight="600" fill="#6d28d9">Provocateur</text>
+
+      <rect x="840" y="120" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="877" y="137" text-anchor="middle" font-size="7.5" font-weight="600" fill="#6d28d9">Storyteller</text>
+
+      <!-- Director nodes — row 2 -->
+      <rect x="670" y="154" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="707" y="169" text-anchor="middle" font-size="6.5" font-weight="600" fill="#6d28d9">Emotional Min.</text>
+
+      <rect x="755" y="154" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="792" y="169" text-anchor="middle" font-size="6.5" font-weight="600" fill="#6d28d9">Culture Hack.</text>
+
+      <rect x="840" y="154" width="75" height="26" rx="11" fill="#ede9fe" stroke="#6d28d9" stroke-width="1"/>
+      <text x="877" y="169" text-anchor="middle" font-size="6.5" font-weight="600" fill="#6d28d9">Perf. Hacker</text>
+
+      <!-- Properties -->
+      <text x="670" y="200" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">archetype · tagline</text>
+      <text x="670" y="212" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">w_logic · w_emotion</text>
+      <text x="670" y="224" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">w_culture · w_action</text>
+      <text x="670" y="236" font-size="8" fill="#374151" font-family="'IBM Plex Mono', monospace">w_performance (weight dims)</text>
+
+      <!-- ═══ Industry Node — BELOW CASES ═══ -->
+      <!-- Box: x=405, y=320, w=100, h=32 → center at x=455 -->
+      <rect x="405" y="320" width="100" height="32" rx="4" fill="#fef9c3" stroke="#a16207" stroke-width="1.5"/>
+      <text x="455" y="340" text-anchor="middle" font-size="9" font-weight="600" fill="#a16207">Industry</text>
+
+      <!-- ═══════════════════════════════════════════════════════
+           Relationship Edges — all routed OUTSIDE boxes
+           ═══════════════════════════════════════════════════════ -->
+
+      <!-- APPLIED_IN: Method → Case
+           Arrow in the 80px gap (x=250 to x=330), center at x=290
+           Arrow line: from x=255 to x=325 at y=145 -->
+      <line x1="255" y1="145" x2="325" y2="145" stroke="#374151" stroke-width="1.5" marker-end="url(#arrowDark)"/>
+      <text x="290" y="137" text-anchor="middle" font-size="7.5" font-weight="600" fill="#374151">APPLIED_IN</text>
+
+      <!-- PREFERS: Director → Method — ELBOW ABOVE all boxes
+           Path: Director top (790,75) → up to y=45 → left to x=135 → down to (135,70)
+           Label centered on horizontal segment -->
+      <path d="M 790 75 L 790 45 L 135 45 L 135 70" fill="none" stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrowPurp)"/>
+      <rect x="405" y="35" width="120" height="14" rx="2" fill="white" stroke="#ede9fe" stroke-width="0.5"/>
+      <text x="465" y="46" text-anchor="middle" font-size="7.5" font-weight="600" fill="#6d28d9">PREFERS {weight, dim}</text>
+
+      <!-- IN_INDUSTRY: Case → Industry — straight down
+           Line: from (455,275) down to (455,315)
+           Label to the right of the line, vertically centered -->
+      <line x1="455" y1="280" x2="455" y2="315" stroke="#a16207" stroke-width="1.5" marker-end="url(#arrowOrange2)"/>
+      <text x="520" y="302" text-anchor="start" font-size="7.5" font-weight="600" fill="#a16207">IN_INDUSTRY</text>
+
+      <!-- ═══ RAG Hybrid Search Section ═══ -->
+      <rect x="20" y="375" width="910" height="160" rx="4" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+      <text x="475" y="397" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">RAG Hybrid Search Pipeline</text>
+
+      <!-- Vector Search -->
+      <rect x="45" y="412" width="180" height="55" rx="3" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.2"/>
+      <text x="135" y="432" text-anchor="middle" font-size="9" font-weight="600" fill="#1d4ed8">① Vector Search</text>
+      <text x="135" y="445" text-anchor="middle" font-size="8" fill="#1d4ed8" opacity="0.7">pgvector cosine similarity</text>
+      <text x="135" y="457" text-anchor="middle" font-size="8" fill="#1d4ed8" opacity="0.7">768-dim embeddings → top 2k</text>
+
+      <line x1="225" y1="439" x2="255" y2="439" stroke="#374151" stroke-width="1.2" marker-end="url(#arrowDark)"/>
+
+      <!-- Graph Enrichment -->
+      <rect x="260" y="412" width="180" height="55" rx="3" fill="#d1fae5" stroke="#047857" stroke-width="1.2"/>
+      <text x="350" y="432" text-anchor="middle" font-size="9" font-weight="600" fill="#047857">② Graph Enrichment</text>
+      <text x="350" y="445" text-anchor="middle" font-size="8" fill="#047857" opacity="0.7">Neo4j: RELATED_TO traversal</text>
+      <text x="350" y="457" text-anchor="middle" font-size="8" fill="#047857" opacity="0.7">co-occurrence bonus (+0.15)</text>
+
+      <line x1="440" y1="439" x2="470" y2="439" stroke="#374151" stroke-width="1.2" marker-end="url(#arrowDark)"/>
+
+      <!-- Director Boost -->
+      <rect x="475" y="412" width="180" height="55" rx="3" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.2"/>
+      <text x="565" y="432" text-anchor="middle" font-size="9" font-weight="600" fill="#6d28d9">③ Director Boost</text>
+      <text x="565" y="445" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.7">PREFERS edge weights</text>
+      <text x="565" y="457" text-anchor="middle" font-size="8" fill="#6d28d9" opacity="0.7">archetype-scaled (+0.10)</text>
+
+      <line x1="655" y1="439" x2="685" y2="439" stroke="#374151" stroke-width="1.2" marker-end="url(#arrowDark)"/>
+
+      <!-- Re-rank -->
+      <rect x="690" y="412" width="210" height="55" rx="3" fill="#fef9c3" stroke="#a16207" stroke-width="1.2"/>
+      <text x="795" y="432" text-anchor="middle" font-size="9" font-weight="600" fill="#a16207">④ Re-rank & Deduplicate</text>
+      <text x="795" y="445" text-anchor="middle" font-size="7.5" fill="#a16207" opacity="0.7" font-family="'IBM Plex Mono', monospace">score = vec + graph + director</text>
+      <text x="795" y="457" text-anchor="middle" font-size="8" fill="#a16207" opacity="0.7">Return top-k results</text>
+
+      <!-- Final score formula -->
+      <rect x="190" y="482" width="570" height="28" rx="2" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+      <text x="475" y="501" text-anchor="middle" font-size="9.5" fill="#374151" font-family="'IBM Plex Mono', monospace" font-weight="500">final_score = vector_similarity + graph_bonus(max 0.15) + director_boost(max 0.10)</text>
+
+    </svg>
+  </div>
+  <p class="figure-caption"><strong>Figure 3.</strong> 3-Layer Ontology and RAG Hybrid Search Pipeline. The knowledge graph comprises four node types (Method, Case, Director, Industry) connected by five edge types. Layer 1 (Methods) contains 61 strategy frameworks with 768-dimensional vector embeddings. Layer 2 (Cases) stores 21 campaign case studies linked to methods via APPLIED_IN edges. Layer 3 (Directors) represents 6 creative persona archetypes with weighted preference dimensions. The RAG pipeline performs hybrid retrieval: vector search (pgvector cosine similarity) → graph enrichment (Neo4j co-occurrence traversal) → director preference boosting → re-ranked composite scoring.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Figure 4: 8-Step Pipeline
+     ═══════════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-content">
+
+    <!-- Phase 1 -->
+    <div class="pipeline-phase phase1">
+      <div class="phase-header">
+        <span class="phase-badge">Phase 1</span>
+        <span class="phase-title">Account Planner — Analysis</span>
+      </div>
+      <div class="phase-steps">
+        <div class="p-step">
+          <div class="p-step-key" style="color:#1d4ed8;">S1</div>
+          <div class="p-step-name">Campaign Goal</div>
+          <div class="p-step-meta">
+            Lead: Account Planner<br>
+            Support: Brand Strategist<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+          </div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-key" style="color:#1d4ed8;">S2</div>
+          <div class="p-step-name">Market Analysis</div>
+          <div class="p-step-meta">
+            Lead: Account Planner<br>
+            Support: BS + CD<br>
+            <span class="tag gemini">Gemini 2.5 Pro</span>
+            <span class="tag web">Web Search</span>
+          </div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-key" style="color:#1d4ed8;">S3</div>
+          <div class="p-step-name">Target Insight</div>
+          <div class="p-step-meta">
+            Lead: Account Planner<br>
+            Support: Creative Director<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-arrow">▼</div>
+
+    <!-- Phase 2 -->
+    <div class="pipeline-phase phase2">
+      <div class="phase-header">
+        <span class="phase-badge">Phase 2</span>
+        <span class="phase-title">Brand Strategist — Strategy</span>
+      </div>
+      <div class="phase-steps">
+        <div class="p-step">
+          <div class="p-step-key" style="color:#6d28d9;">S4</div>
+          <div class="p-step-name">Principal Competition</div>
+          <div class="p-step-meta">
+            Lead: Brand Strategist<br>
+            Support: Account Planner<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+            <span class="tag rag">RAG: Methods</span>
+          </div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-key" style="color:#6d28d9;">S5</div>
+          <div class="p-step-name">Target Definition</div>
+          <div class="p-step-meta">
+            Lead: Brand Strategist<br>
+            Support: AP + CD<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+          </div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-key" style="color:#6d28d9;">S6</div>
+          <div class="p-step-name">Winning Strategy</div>
+          <div class="p-step-meta">
+            Lead: Brand Strategist<br>
+            Support: Creative Director<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+            <span class="tag rag">RAG: Methods</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-arrow">▼</div>
+
+    <!-- Phase 3 -->
+    <div class="pipeline-phase phase3">
+      <div class="phase-header">
+        <span class="phase-badge">Phase 3</span>
+        <span class="phase-title">Creative Director — Creative</span>
+      </div>
+      <div class="phase-steps">
+        <div class="p-step">
+          <div class="p-step-key" style="color:#c2410c;">S7</div>
+          <div class="p-step-name">Consumer Promise</div>
+          <div class="p-step-meta">
+            Lead: Creative Director<br>
+            Support: Brand Strategist<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+          </div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-key" style="color:#c2410c;">S8</div>
+          <div class="p-step-name">Creative Strategy</div>
+          <div class="p-step-meta">
+            Lead: Creative Director<br>
+            Support: BS + AP<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-arrow">▼</div>
+
+    <!-- Final: Slides -->
+    <div class="pipeline-phase phase-final">
+      <div class="phase-header">
+        <span class="phase-badge">Final</span>
+        <span class="phase-title">Presentation Designer — Output Generation</span>
+      </div>
+      <div class="phase-steps">
+        <div class="p-step" style="max-width: 320px;">
+          <div class="p-step-name">Slide Deck Generation</div>
+          <div class="p-step-meta">
+            All 8 step outputs → C-level pitch format<br>
+            <span class="tag claude">Claude Sonnet 4</span>
+            → <code style="font-size:9px;">slides_json</code> → <strong>PPTX Export</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Discussion Pattern -->
+    <div class="discussion-box">
+      <div class="discussion-box-title">Per-Step Team Discussion Pattern (applied to each step S1–S8)</div>
+      <div class="discussion-flow">
+        <div class="d-step" style="background:#fff7ed; border-color:#c2410c;">
+          <strong style="color:#c2410c;">Turn 1</strong> — Chief Director Framing
+          <br><span style="font-size:8px; color:#6b7280;">Director persona frames the discussion (3–5 sentences)</span>
+        </div>
+        <div class="d-arrow">→</div>
+        <div class="d-step" style="background:#dbeafe; border-color:#1d4ed8;">
+          <strong style="color:#1d4ed8;">Turn 2</strong> — Lead Agent Analysis
+          <br><span style="font-size:8px; color:#6b7280;">Primary role runs step with RAG context + brief</span>
+        </div>
+        <div class="d-arrow">→</div>
+        <div class="d-step" style="background:#ede9fe; border-color:#6d28d9;">
+          <strong style="color:#6d28d9;">Turn 3+</strong> — Support Agent Reactions
+          <br><span style="font-size:8px; color:#6b7280;">Reinforce, challenge, or expand (300–500 chars each)</span>
+        </div>
+        <div class="d-arrow">→</div>
+        <div class="d-step" style="background:#d1fae5; border-color:#047857;">
+          <strong style="color:#047857;">Final</strong> — Director Synthesis
+          <br><span style="font-size:8px; color:#6b7280;">Synthesize all turns → final output (max 2000 tokens)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Timing Note -->
+    <div style="margin-top: 12px; padding: 10px 16px; border: 1px solid #e5e7eb; border-radius: 2px; background: #f9fafb;">
+      <div style="font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 6px;">Director-Controlled Case Retrieval Timing (case_timing.yaml)</div>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 9px; color: #6b7280;">
+        <div><strong style="color:#6d28d9;">Strategist:</strong> s4, s5, s6</div>
+        <div><strong style="color:#6d28d9;">Provocateur:</strong> s4, s7</div>
+        <div><strong style="color:#6d28d9;">Storyteller:</strong> s2, s3, s7, s8</div>
+        <div><strong style="color:#6d28d9;">Emotional Minimalist:</strong> s3, s7</div>
+        <div><strong style="color:#6d28d9;">Culture Hacker:</strong> s2, s4, s8</div>
+        <div><strong style="color:#6d28d9;">Performance Hacker:</strong> s6, s8</div>
+      </div>
+    </div>
+
+  </div>
+  <p class="figure-caption"><strong>Figure 4.</strong> 8-Step Pipeline with Multi-Agent Team Discussion. The pipeline executes sequentially across three phases: Analysis (Account Planner lead), Strategy (Brand Strategist lead), and Creative (Creative Director lead). Each step employs a structured team discussion pattern where the selected director persona frames the discussion, the lead agent provides primary analysis with optional RAG retrieval, support agents contribute reactions, and the director synthesizes the final output. Method retrieval via RAG occurs at steps S4 and S6; case retrieval timing varies by director archetype per the case_timing policy. The Presentation Designer generates the final slide deck from all 8 step outputs.</p>
+</div>
+
+</body>
+</html>

@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { runPipelineSSE, DiscussionTurn, getDiscussionTranscript } from "@/lib/api";
+import { runPipelineSSE, DiscussionTurn, getDiscussionTranscript, getMeetingPptxUrl } from "@/lib/api";
+import SlideArtifactPanel from "@/components/SlideArtifactPanel";
 
 /* ── Types ── */
 
@@ -255,6 +256,7 @@ function PipelineContent() {
   const [runAttempt, setRunAttempt] = useState(0);
   const [transcriptBusy, setTranscriptBusy] = useState<"copy" | "save" | null>(null);
   const [transcriptNotice, setTranscriptNotice] = useState("");
+  const [isArtifactOpen, setIsArtifactOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const startedRunKeyRef = useRef("");
 
@@ -393,7 +395,7 @@ function PipelineContent() {
   }, [projectId]);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className={`max-w-4xl mx-auto transition-all duration-300 ${isArtifactOpen ? "mr-[520px]" : ""}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -426,15 +428,25 @@ function PipelineContent() {
               >
                 회의록 보기
               </a>
+              {isComplete && (
+                <a
+                  href={getMeetingPptxUrl(projectId!)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-flux-accent text-white rounded-lg text-sm hover:opacity-90 transition font-medium"
+                >
+                  Meeting PPTX
+                </a>
+              )}
             </>
           )}
           {isComplete && (
-            <a
-              href={`/result?projectId=${projectId}`}
+            <button
+              onClick={() => setIsArtifactOpen(true)}
               className="px-6 py-2.5 bg-flux-blue text-white rounded-lg hover:bg-flux-blue-hover transition font-medium shadow-sm"
             >
-              결과 보기 →
-            </a>
+              PPTX 생성결과
+            </button>
           )}
         </div>
       </div>
@@ -546,6 +558,15 @@ function PipelineContent() {
       </div>
 
       <div ref={bottomRef} className="h-8" />
+
+      {/* Slide Artifact Panel */}
+      {projectId && (
+        <SlideArtifactPanel
+          projectId={projectId}
+          isOpen={isArtifactOpen}
+          onClose={() => setIsArtifactOpen(false)}
+        />
+      )}
 
       {/* Global animation styles */}
       <style jsx global>{`

@@ -13,6 +13,7 @@ def load_agent_prompt(role: str) -> str:
         "brand_strategist": "brand_strategy",
         "creative_director": "creative_direction",
         "presentation_designer": "presentation_design",
+        "meeting_slide_designer": None,  # prompt only, no SKILL.md
     }
     
     base_prompt = ""

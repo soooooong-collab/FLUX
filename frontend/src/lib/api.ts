@@ -281,6 +281,10 @@ export function getPptxUrl(projectId: string) {
   return `${API}/api/pipeline/${projectId}/export/pptx`;
 }
 
+export function getMeetingPptxUrl(projectId: string) {
+  return `${API}/api/pipeline/${projectId}/export/meeting-pptx`;
+}
+
 // ── Directors ──
 
 export async function listDirectors() {
